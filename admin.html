@@ -74,6 +74,33 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
 .popup-msg{font-size:14px;color:#333;margin-top:10px;}
 .popup-close{margin-top:20px;padding:12px 32px;background:#1a5276;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;}
 #no-results{text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;}
+
+/* 名簿タブ */
+.roster-header{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.roster-meta{font-size:13px;color:#555;line-height:2;margin-bottom:12px;}
+.roster-meta strong{color:#1a5276;}
+.roster-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:14px;}
+.roster-table th{background:#1a5276;color:#fff;padding:10px 12px;text-align:left;font-weight:500;}
+.roster-table td{padding:10px 12px;border-bottom:0.5px solid #f0f0f0;color:#333;}
+.roster-table tr:last-child td{border-bottom:none;}
+.roster-table .no{width:40px;text-align:center;color:#888;}
+.print-btn{width:100%;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;}
+
+/* 印刷用スタイル */
+@media print {
+  header,.tabs,.event-select-wrap,.metrics,.reload-btn,.csv-btn,.print-btn,.reload-roster-btn,
+  #tab-summary,#tab-manual,.section-title{display:none!important;}
+  body{background:#fff;}
+  #tab-roster{display:block!important;padding:0;}
+  .roster-print-header{display:block!important;}
+  .roster-table{box-shadow:none;border:1px solid #ddd;}
+  .roster-table th{background:#1a5276!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  #print-timestamp{display:block!important;}
+}
+.roster-print-header{display:none;text-align:center;margin-bottom:20px;}
+.roster-print-header h2{font-size:20px;font-weight:700;margin-bottom:6px;}
+.roster-print-header p{font-size:13px;color:#555;}
+#print-timestamp{display:none;font-size:11px;color:#aaa;text-align:right;margin-bottom:8px;}
 </style>
 </head>
 <body>
@@ -97,6 +124,7 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
   <div class="tabs">
     <div class="tab active" onclick="switchTab('summary')">出席概要</div>
     <div class="tab" onclick="switchTab('manual')">手動受付</div>
+    <div class="tab" onclick="switchTab('roster')">名簿印刷</div>
   </div>
   <div class="tab-panel active" id="tab-summary">
     <div class="event-select-wrap">
@@ -134,6 +162,39 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
     <div id="search-results"></div>
   </div>
 </div>
+<div class="tab-panel" id="tab-roster">
+  <div class="roster-header">
+    <div class="event-select-wrap" style="margin-bottom:0;box-shadow:none;padding:0;">
+      <label>行事を選択してください</label>
+      <select id="event-select-roster" onchange="onRosterEventChange()"></select>
+    </div>
+  </div>
+  <div id="roster-meta-card" style="display:none;" class="roster-header">
+    <div class="roster-meta" id="roster-meta"></div>
+    <button class="print-btn" onclick="printRoster()">印刷 / PDF保存</button>
+    <button class="reload-btn reload-roster-btn" onclick="loadRoster()" style="margin-top:8px;">最新情報に更新</button>
+  </div>
+  <div class="roster-print-header" id="roster-print-header">
+    <h2 id="print-title"></h2>
+    <p id="print-meta"></p>
+  </div>
+  <div id="print-timestamp"></div>
+  <table class="roster-table" id="roster-table" style="display:none;">
+    <thead>
+      <tr>
+        <th class="no">No.</th>
+        <th>事業所名</th>
+        <th>氏名</th>
+        <th>受付時刻</th>
+        <th>受付方法</th>
+      </tr>
+    </thead>
+    <tbody id="roster-body">
+    </tbody>
+  </table>
+  <div id="roster-empty" style="text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;">出席記録がありません</div>
+</div>
+
 <div id="popup">
   <div class="popup-card">
     <div class="popup-icon" id="popup-icon"></div>
@@ -174,15 +235,17 @@ function saveGasUrl(){
   GAS_URL=url;localStorage.setItem("gas_url",url);showMain();
 }
 function switchTab(name){
-  document.querySelectorAll(".tab").forEach(function(t,i){t.classList.toggle("active",["summary","manual"][i]===name);});
+  document.querySelectorAll(".tab").forEach(function(t,i){t.classList.toggle("active",["summary","manual","roster"][i]===name);});
   document.querySelectorAll(".tab-panel").forEach(function(p){p.classList.remove("active");});
   document.getElementById("tab-"+name).classList.add("active");
+  if(name==="roster" && document.getElementById("event-select-roster").options.length<=1) loadEvents();
 }
 function loadEvents(){
   jsonp(GAS_URL+"?action=getEvents",function(err,events){
     if(err||!events)return;
-    ["event-select","event-select-manual"].forEach(function(id){
+    ["event-select","event-select-manual","event-select-roster"].forEach(function(id){
       var sel=document.getElementById(id);
+      if(!sel)return;
       sel.innerHTML='<option value="">-- 選択してください --</option>';
       events.forEach(function(ev){
         var opt=document.createElement("option");
@@ -269,6 +332,69 @@ function showPopup(icon,name,company,msg){
 }
 function closePopup(){document.getElementById("popup").classList.remove("show");}
 setInterval(function(){if(currentEventId)loadSummary();},30000);
+
+// ===== 名簿タブ =====
+var rosterEventId="";
+var rosterRows=[];
+
+function onRosterEventChange(){
+  rosterEventId=document.getElementById("event-select-roster").value;
+  if(rosterEventId) loadRoster();
+}
+
+function loadRoster(){
+  if(!rosterEventId)return;
+  document.getElementById("roster-table").style.display="none";
+  document.getElementById("roster-empty").style.display="none";
+
+  // サマリーで行事情報を取得
+  jsonp(GAS_URL+"?action=summary&eventId="+encodeURIComponent(rosterEventId),function(err,s){
+    if(err||!s)return;
+    var sel=document.getElementById("event-select-roster");
+    var evName=sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].textContent:"";
+    var metaEl=document.getElementById("roster-meta");
+    metaEl.innerHTML="<strong>行事名：</strong>"+evName+"<br>"
+      +"<strong>出席者数：</strong>"+s.attended+"名";
+    document.getElementById("roster-meta-card").style.display="block";
+
+    // 印刷用ヘッダー設定
+    document.getElementById("print-title").textContent=evName+" 出席者名簿";
+    document.getElementById("print-meta").textContent="出席者数："+s.attended+"名";
+    document.getElementById("print-timestamp").textContent=
+      "出力日時："+new Date().toLocaleString("ja-JP");
+  });
+
+  // 全ログを取得して名簿を表示
+  jsonp(GAS_URL+"?action=fulllog&eventId="+encodeURIComponent(rosterEventId),function(err,rows){
+    if(err||!rows){document.getElementById("roster-empty").style.display="block";return;}
+    rosterRows=rows;
+    var tbody=document.getElementById("roster-body");
+    if(rows.length===0){
+      document.getElementById("roster-empty").style.display="block";
+      return;
+    }
+    // 受付時刻順にソート
+    rows.sort(function(a,b){return a.time<b.time?-1:1;});
+    tbody.innerHTML=rows.map(function(r,i){
+      var badge=r.method==="手動受付"?
+        '<span style="background:#ebf5fb;color:#1a5276;font-size:11px;padding:2px 8px;border-radius:10px;">手動</span>':
+        '<span style="background:#eafaf1;color:#1e8449;font-size:11px;padding:2px 8px;border-radius:10px;">QR</span>';
+      return'<tr><td class="no">'+(i+1)+'</td>'
+        +'<td style="font-size:12px;">'+(r.company||"")+"</td>"
+        +'<td><strong>'+r.name+"</strong></td>"
+        +"<td>"+r.time+"</td>"
+        +"<td>"+badge+"</td></tr>";
+    }).join("");
+    document.getElementById("roster-table").style.display="table";
+  });
+}
+
+function printRoster(){
+  if(!rosterRows||rosterRows.length===0){alert("名簿データがありません");return;}
+  document.getElementById("print-timestamp").textContent=
+    "出力日時："+new Date().toLocaleString("ja-JP");
+  window.print();
+}
 </script>
 </body>
 </html>
