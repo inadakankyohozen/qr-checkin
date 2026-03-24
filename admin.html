@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>青年部会 管理画面</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,"Hiragino Sans",sans-serif;background:#f0f4f8;min-height:100vh;}
+#setup-screen{display:none;min-height:100vh;align-items:center;justify-content:center;padding:32px 20px;flex-direction:column;gap:16px;}
+#setup-screen.active{display:flex;}
+.setup-card{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:480px;box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+.setup-card h2{font-size:18px;color:#1a5276;margin-bottom:6px;font-weight:700;}
+.setup-card p{font-size:13px;color:#666;line-height:1.7;margin-bottom:20px;}
+.setup-card label{font-size:13px;color:#444;display:block;margin-bottom:6px;font-weight:500;}
+.setup-card input{width:100%;font-size:14px;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;margin-bottom:16px;background:#f8f9fa;}
+.setup-card input:focus{outline:none;border-color:#1a5276;background:#fff;}
+.setup-save-btn{width:100%;padding:14px;background:#1a5276;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;}
+#main-screen{display:none;flex-direction:column;min-height:100vh;}
+#main-screen.active{display:flex;}
+header{background:#1a5276;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+header h1{font-size:18px;font-weight:600;}
+.header-right{display:flex;align-items:center;gap:10px;}
+#settings-btn{background:rgba(255,255,255,0.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;}
+#last-update{font-size:11px;color:rgba(255,255,255,0.7);}
+.tabs{display:flex;background:#fff;border-bottom:1px solid #e0e0e0;flex-shrink:0;}
+.tab{flex:1;padding:12px 8px;font-size:14px;font-weight:500;text-align:center;cursor:pointer;color:#888;border-bottom:3px solid transparent;transition:all 0.15s;}
+.tab.active{color:#1a5276;border-bottom-color:#1a5276;}
+.tab-panel{display:none;padding:16px;}
+.tab-panel.active{display:block;}
+.event-select-wrap{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.event-select-wrap label{font-size:13px;color:#666;display:block;margin-bottom:6px;}
+select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;border-radius:10px;background:#fff;-webkit-appearance:none;}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.metric-card{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);text-align:center;}
+.metric-label{font-size:11px;color:#888;margin-bottom:4px;}
+.metric-num{font-size:30px;font-weight:700;color:#1a5276;line-height:1.2;}
+.metric-num.red{color:#e74c3c;}
+.section-title{font-size:13px;color:#888;margin-bottom:8px;font-weight:500;}
+.log-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:14px;}
+.log-table{width:100%;border-collapse:collapse;font-size:13px;}
+.log-table th{background:#1a5276;color:#fff;padding:9px 12px;text-align:left;font-weight:500;}
+.log-table td{padding:9px 12px;border-bottom:0.5px solid #f0f0f0;color:#333;vertical-align:middle;}
+.log-table tr:last-child td{border-bottom:none;}
+.log-table tr:hover td{background:#f8fbff;}
+.badge-ok{background:#eafaf1;color:#1e8449;font-size:11px;padding:2px 8px;border-radius:10px;}
+.badge-manual{background:#ebf5fb;color:#1a5276;font-size:11px;padding:2px 8px;border-radius:10px;}
+.csv-btn{width:100%;padding:12px;background:#1a5276;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;}
+.reload-btn{width:100%;padding:10px;background:#fff;color:#1a5276;border:1.5px solid #1a5276;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;}
+.search-wrap{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.search-wrap label{font-size:13px;color:#666;display:block;margin-bottom:6px;}
+.search-row{display:flex;gap:8px;}
+.search-row input{flex:1;font-size:15px;padding:10px 14px;border:1.5px solid #ddd;border-radius:10px;background:#fff;}
+.search-row input:focus{outline:none;border-color:#1a5276;}
+.search-btn{padding:10px 20px;background:#1a5276;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;}
+#search-results{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.result-item{background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;align-items:center;gap:12px;}
+.result-item.attended{opacity:0.55;}
+.result-info{flex:1;}
+.result-name{font-size:15px;font-weight:600;color:#1a1a1a;}
+.result-company{font-size:13px;color:#666;margin-top:2px;}
+.result-status{font-size:12px;margin-top:4px;}
+.result-status.ok{color:#27ae60;}
+.result-status.none{color:#888;}
+.checkin-btn{padding:10px 18px;background:#27ae60;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.checkin-btn:disabled{background:#bbb;cursor:not-allowed;}
+#popup{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;z-index:100;padding:20px;}
+#popup.show{display:flex;}
+.popup-card{background:#fff;border-radius:20px;padding:28px 24px;max-width:360px;width:100%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
+.popup-icon{font-size:48px;margin-bottom:12px;}
+.popup-name{font-size:22px;font-weight:700;color:#1a1a1a;}
+.popup-company{font-size:14px;color:#555;margin-top:4px;}
+.popup-msg{font-size:14px;color:#333;margin-top:10px;}
+.popup-close{margin-top:20px;padding:12px 32px;background:#1a5276;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;}
+#no-results{text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;}
+</style>
+</head>
+<body>
+<div id="setup-screen">
+  <div class="setup-card">
+    <h2>初回設定</h2>
+    <p>GASのWebアプリURLを入力してください。</p>
+    <label>GAS WebアプリURL</label>
+    <input type="url" id="gas-url-input" placeholder="https://script.google.com/macros/s/.../exec">
+    <button class="setup-save-btn" onclick="saveGasUrl()">保存して開始</button>
+  </div>
+</div>
+<div id="main-screen">
+  <header>
+    <h1>管理画面</h1>
+    <div class="header-right">
+      <span id="last-update"></span>
+      <button id="settings-btn" onclick="showSetup()">⚙</button>
+    </div>
+  </header>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('summary')">出席概要</div>
+    <div class="tab" onclick="switchTab('manual')">手動受付</div>
+  </div>
+  <div class="tab-panel active" id="tab-summary">
+    <div class="event-select-wrap">
+      <label>研修会</label>
+      <select id="event-select" onchange="onEventChange()"></select>
+    </div>
+    <div class="metrics">
+      <div class="metric-card"><div class="metric-label">出席済み</div><div class="metric-num" id="cnt-attended">-</div></div>
+      <div class="metric-card"><div class="metric-label">参加予定</div><div class="metric-num" id="cnt-total">-</div></div>
+      <div class="metric-card"><div class="metric-label">未受付</div><div class="metric-num red" id="cnt-remain">-</div></div>
+    </div>
+    <div class="section-title">出席ログ</div>
+    <div class="log-card">
+      <table class="log-table">
+        <thead><tr><th>No.</th><th>氏名</th><th>事業所名</th><th>受付時刻</th><th>方法</th></tr></thead>
+        <tbody id="log-body"><tr><td colspan="5" style="text-align:center;color:#aaa;padding:20px;">研修会を選択してください</td></tr></tbody>
+      </table>
+    </div>
+    <button class="csv-btn" onclick="exportCsv()">CSVダウンロード</button>
+    <button class="reload-btn" onclick="loadSummary()">最新情報に更新</button>
+  </div>
+  <div class="tab-panel" id="tab-manual">
+    <div class="event-select-wrap">
+      <label>研修会（先に選択してください）</label>
+      <select id="event-select-manual" onchange="onManualEventChange()"></select>
+    </div>
+    <div class="search-wrap">
+      <label>氏名または事業所名で検索</label>
+      <div class="search-row">
+        <input type="text" id="search-input" placeholder="例：稲田、千葉県環境" oninput="onSearchInput()">
+        <button class="search-btn" onclick="doSearch()">検索</button>
+      </div>
+    </div>
+    <div id="no-results">検索結果がありません</div>
+    <div id="search-results"></div>
+  </div>
+</div>
+<div id="popup">
+  <div class="popup-card">
+    <div class="popup-icon" id="popup-icon"></div>
+    <div class="popup-name" id="popup-name"></div>
+    <div class="popup-company" id="popup-company"></div>
+    <div class="popup-msg" id="popup-msg"></div>
+    <button class="popup-close" onclick="closePopup()">OK</button>
+  </div>
+</div>
+<script>
+var GAS_URL="",currentEventId="",manualEventId="",cbCount=0,allLogRows=[],searchTimer=null;
+function jsonp(url,cb){
+  var n="__cb"+(cbCount++);
+  window[n]=function(d){delete window[n];if(s.parentNode)s.parentNode.removeChild(s);cb(null,d);};
+  var s=document.createElement("script");
+  s.src=url+(url.indexOf("?")>=0?"&":"?")+"callback="+n;
+  s.onerror=function(){delete window[n];if(s.parentNode)s.parentNode.removeChild(s);cb(new Error("error"),null);};
+  document.head.appendChild(s);
+}
+window.addEventListener("load",function(){
+  var saved=localStorage.getItem("gas_url");
+  if(saved&&saved.indexOf("https://script.google.com")===0){GAS_URL=saved;showMain();}else{showSetup();}
+});
+function showSetup(){
+  document.getElementById("setup-screen").classList.add("active");
+  document.getElementById("main-screen").classList.remove("active");
+  var saved=localStorage.getItem("gas_url");
+  if(saved)document.getElementById("gas-url-input").value=saved;
+}
+function showMain(){
+  document.getElementById("setup-screen").classList.remove("active");
+  document.getElementById("main-screen").classList.add("active");
+  loadEvents();
+}
+function saveGasUrl(){
+  var url=document.getElementById("gas-url-input").value.trim();
+  if(!url||url.indexOf("https://script.google.com")!==0){alert("正しいGAS URLを入力してください。");return;}
+  GAS_URL=url;localStorage.setItem("gas_url",url);showMain();
+}
+function switchTab(name){
+  document.querySelectorAll(".tab").forEach(function(t,i){t.classList.toggle("active",["summary","manual"][i]===name);});
+  document.querySelectorAll(".tab-panel").forEach(function(p){p.classList.remove("active");});
+  document.getElementById("tab-"+name).classList.add("active");
+}
+function loadEvents(){
+  jsonp(GAS_URL+"?action=getEvents",function(err,events){
+    if(err||!events)return;
+    ["event-select","event-select-manual"].forEach(function(id){
+      var sel=document.getElementById(id);
+      sel.innerHTML='<option value="">-- 選択してください --</option>';
+      events.forEach(function(ev){
+        var opt=document.createElement("option");
+        opt.value=ev.id;opt.textContent=ev.name+"（"+ev.date+"）";sel.appendChild(opt);
+      });
+    });
+  });
+}
+function onEventChange(){currentEventId=document.getElementById("event-select").value;if(currentEventId)loadSummary();}
+function loadSummary(){
+  if(!currentEventId)return;
+  jsonp(GAS_URL+"?action=summary&eventId="+encodeURIComponent(currentEventId),function(err,s){
+    if(err||!s)return;
+    document.getElementById("cnt-attended").textContent=s.attended;
+    document.getElementById("cnt-total").textContent=s.total||"-";
+    document.getElementById("cnt-remain").textContent=s.total>0?(s.total-s.attended):"-";
+    document.getElementById("last-update").textContent="更新: "+new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"});
+  });
+  jsonp(GAS_URL+"?action=fulllog&eventId="+encodeURIComponent(currentEventId),function(err,rows){
+    if(err||!rows)return;allLogRows=rows;renderLog(rows);
+  });
+}
+function renderLog(rows){
+  var tbody=document.getElementById("log-body");
+  if(!rows||rows.length===0){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#aaa;padding:20px;">出席記録がありません</td></tr>';return;}
+  tbody.innerHTML=rows.map(function(r,i){
+    var badge=r.method==="手動受付"?'<span class="badge-manual">手動</span>':'<span class="badge-ok">QR</span>';
+    return'<tr><td>'+(i+1)+'</td><td><strong>'+r.name+'</strong></td><td style="font-size:12px;color:#555;">'+r.company+'</td><td style="white-space:nowrap;">'+r.time+'</td><td>'+badge+'</td></tr>';
+  }).join("");
+}
+function exportCsv(){
+  if(!allLogRows||allLogRows.length===0){alert("データがありません");return;}
+  var csv="\uFEFFNo.,氏名,事業所名,受付時刻,受付方法\n";
+  allLogRows.forEach(function(r,i){csv+=(i+1)+',"'+r.name+'","'+r.company+'",'+r.time+","+(r.method||"QR")+"\n";});
+  var blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="attendance.csv";a.click();
+}
+function onManualEventChange(){
+  manualEventId=document.getElementById("event-select-manual").value;
+  document.getElementById("search-results").innerHTML="";
+  document.getElementById("no-results").style.display="none";
+  document.getElementById("search-input").value="";
+}
+function onSearchInput(){clearTimeout(searchTimer);searchTimer=setTimeout(doSearch,400);}
+function doSearch(){
+  var kw=document.getElementById("search-input").value.trim();
+  if(!kw){document.getElementById("search-results").innerHTML="";document.getElementById("no-results").style.display="none";return;}
+  if(!manualEventId){alert("先に研修会を選択してください");return;}
+  jsonp(GAS_URL+"?action=search&keyword="+encodeURIComponent(kw)+"&eventId="+encodeURIComponent(manualEventId),function(err,results){
+    var container=document.getElementById("search-results");
+    var noResult=document.getElementById("no-results");
+    if(err||!results||results.length===0){container.innerHTML="";noResult.style.display="block";return;}
+    noResult.style.display="none";
+    container.innerHTML=results.map(function(r){
+      var isA=r.attended;
+      return'<div class="result-item'+(isA?" attended":"")+'" id="item-'+r.id+'">'
+        +'<div class="result-info"><div class="result-name">'+r.name+'</div>'
+        +'<div class="result-company">'+r.company+'</div>'
+        +'<div class="result-status '+(isA?"ok":"none")+'">'+(isA?"✅ 受付済み":"未受付")+'</div></div>'
+        +'<button class="checkin-btn" '+(isA?'disabled style="background:#bbb"':'onclick="doManualCheckin(\''+r.id+'\',\''+r.name+'\',\''+r.company+'\')"')+'>'+(isA?"受付済み":"受付する")+'</button>'
+        +'</div>';
+    }).join("");
+  });
+}
+function doManualCheckin(memberId,name,company){
+  if(!manualEventId){alert("研修会を選択してください");return;}
+  jsonp(GAS_URL+"?action=manualCheckin&memberId="+encodeURIComponent(memberId)+"&eventId="+encodeURIComponent(manualEventId),function(err,result){
+    if(err||!result){showPopup("⚠️",name,company,"通信エラー。再度お試しください。");return;}
+    if(result.ok){
+      showPopup("✅",result.name,result.company,"受付完了  "+result.time);
+      var item=document.getElementById("item-"+memberId);
+      if(item){item.classList.add("attended");var btn=item.querySelector("button");if(btn){btn.textContent="受付済み";btn.disabled=true;btn.style.background="#bbb";}var st=item.querySelector(".result-status");if(st){st.textContent="✅ 受付済み";st.className="result-status ok";}}
+      loadSummary();
+    }else if(result.duplicate){showPopup("🔁",result.name,result.company,result.msg);}
+    else{showPopup("⚠️",result.name||name,result.company||company,result.msg);}
+  });
+}
+function showPopup(icon,name,company,msg){
+  document.getElementById("popup-icon").textContent=icon;
+  document.getElementById("popup-name").textContent=name;
+  document.getElementById("popup-company").textContent=company;
+  document.getElementById("popup-msg").textContent=msg;
+  document.getElementById("popup").classList.add("show");
+}
+function closePopup(){document.getElementById("popup").classList.remove("show");}
+setInterval(function(){if(currentEventId)loadSummary();},30000);
+</script>
+</body>
+</html>
