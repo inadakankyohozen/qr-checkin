@@ -273,6 +273,25 @@ var GAS_URL        = "";
 var currentEventId = "";
 var isProcessing   = false;
 var scanning       = false;
+var cbCount        = 0; // JSONPコールバック連番
+
+// ===== JSONP通信（CORSを回避） =====
+function jsonp(url, callback) {
+  var cbName = "__gasCallback" + (cbCount++);
+  window[cbName] = function(data) {
+    delete window[cbName];
+    document.head.removeChild(script);
+    callback(null, data);
+  };
+  var script = document.createElement("script");
+  script.src = url + (url.indexOf("?") >= 0 ? "&" : "?") + "callback=" + cbName;
+  script.onerror = function() {
+    delete window[cbName];
+    document.head.removeChild(script);
+    callback(new Error("通信エラー"), null);
+  };
+  document.head.appendChild(script);
+}
 
 // ===== 起動時: URLが保存済みかチェック =====
 window.addEventListener("load", function() {
@@ -311,22 +330,20 @@ function saveGasUrl() {
 
 // ===== 研修会一覧 =====
 function loadEvents() {
-  fetch(GAS_URL + "?action=getEvents")
-    .then(function(r) { return r.json(); })
-    .then(function(events) {
-      var sel = document.getElementById("event-select");
-      sel.innerHTML = '<option value="">-- 選択してください --</option>';
-      events.forEach(function(ev) {
-        var opt = document.createElement("option");
-        opt.value = ev.id;
-        opt.textContent = ev.name + "（" + ev.date + "）";
-        sel.appendChild(opt);
-      });
-    })
-    .catch(function() {
-      document.getElementById("event-select").innerHTML =
-        '<option>読み込みエラー。URLを確認してください</option>';
+  jsonp(GAS_URL + "?action=getEvents", function(err, events) {
+    var sel = document.getElementById("event-select");
+    if (err || !events) {
+      sel.innerHTML = '<option>読み込みエラー。URLを確認してください</option>';
+      return;
+    }
+    sel.innerHTML = '<option value="">-- 選択してください --</option>';
+    events.forEach(function(ev) {
+      var opt = document.createElement("option");
+      opt.value = ev.id;
+      opt.textContent = ev.name + "（" + ev.date + "）";
+      sel.appendChild(opt);
     });
+  });
 }
 
 // ===== カメラ起動 =====
@@ -382,23 +399,26 @@ function handleQRCode(data) {
   isProcessing = true;
   showResult("loading", "処理中...", "", "");
 
-  fetch(GAS_URL + "?action=checkin&encoded=" + encodeURIComponent(data) + "&eventId=" + encodeURIComponent(currentEventId))
-    .then(function(r) { return r.json(); })
-    .then(function(result) {
-      if (result.ok) {
-        showResult("success", result.name, result.company, "受付完了  " + result.time);
-      } else if (result.duplicate) {
-        showResult("dup", result.name, result.company, result.msg);
-      } else {
-        showResult("error", result.name || "エラー", result.company || "", result.msg);
-      }
-      updateSummary();
-      setTimeout(function() { hideResult(); isProcessing = false; }, 3500);
-    })
-    .catch(function() {
+  var url = GAS_URL + "?action=checkin"
+    + "&encoded=" + encodeURIComponent(data)
+    + "&eventId=" + encodeURIComponent(currentEventId);
+
+  jsonp(url, function(err, result) {
+    if (err || !result) {
       showResult("error", "通信エラー", "", "再度お試しください");
       setTimeout(function() { hideResult(); isProcessing = false; }, 3000);
-    });
+      return;
+    }
+    if (result.ok) {
+      showResult("success", result.name, result.company, "受付完了  " + result.time);
+    } else if (result.duplicate) {
+      showResult("dup", result.name, result.company, result.msg);
+    } else {
+      showResult("error", result.name || "エラー", result.company || "", result.msg);
+    }
+    updateSummary();
+    setTimeout(function() { hideResult(); isProcessing = false; }, 3500);
+  });
 }
 
 function showResult(type, name, company, msg) {
@@ -426,21 +446,21 @@ function onEventChange() {
 
 function updateSummary() {
   if (!currentEventId) return;
-  fetch(GAS_URL + "?action=summary&eventId=" + encodeURIComponent(currentEventId))
-    .then(function(r) { return r.json(); })
-    .then(function(s) {
-      document.getElementById("cnt-attended").textContent = s.attended;
-      document.getElementById("cnt-total").textContent    = s.total || "-";
-      document.getElementById("cnt-remain").textContent   = s.total > 0 ? (s.total - s.attended) : "-";
-      var ul = document.getElementById("recent-list");
-      if (s.recent && s.recent.length > 0) {
-        ul.innerHTML = s.recent.map(function(r) {
-          return '<li><div><div class="recent-name">' + r.name + '</div>'
-            + '<div class="recent-company">' + r.company + '</div></div>'
-            + '<div class="recent-time">' + r.time + '</div></li>';
-        }).join("");
-      }
-    });
+  var url = GAS_URL + "?action=summary&eventId=" + encodeURIComponent(currentEventId);
+  jsonp(url, function(err, s) {
+    if (err || !s) return;
+    document.getElementById("cnt-attended").textContent = s.attended;
+    document.getElementById("cnt-total").textContent    = s.total || "-";
+    document.getElementById("cnt-remain").textContent   = s.total > 0 ? (s.total - s.attended) : "-";
+    var ul = document.getElementById("recent-list");
+    if (s.recent && s.recent.length > 0) {
+      ul.innerHTML = s.recent.map(function(r) {
+        return '<li><div><div class="recent-name">' + r.name + '</div>'
+          + '<div class="recent-company">' + r.company + '</div></div>'
+          + '<div class="recent-time">' + r.time + '</div></li>';
+      }).join("");
+    }
+  });
 }
 
 setInterval(function() { if (currentEventId) updateSummary(); }, 30000);
