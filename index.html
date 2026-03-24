@@ -399,8 +399,10 @@ function handleQRCode(data) {
   isProcessing = true;
   showResult("loading", "処理中...", "", "");
 
+  // Base64の末尾 = はURLパラメータで文字化けするため除去（GAS側で復元）
+  var safeData = data.replace(/=+$/, "");
   var url = GAS_URL + "?action=checkin"
-    + "&encoded=" + encodeURIComponent(data)
+    + "&encoded=" + encodeURIComponent(safeData)
     + "&eventId=" + encodeURIComponent(currentEventId);
 
   jsonp(url, function(err, result) {
