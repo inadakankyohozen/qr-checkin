@@ -126,7 +126,7 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
     <div class="tab" onclick="switchTab('manual')">手動受付</div>
     <div class="tab" onclick="switchTab('roster')">名簿印刷</div>
   </div>
-  <div class="tab-panel active" id="tab-summary">
+  <div class="tab-panel" id="tab-summary" style="display:block;">
     <div class="event-select-wrap">
       <label>研修会</label>
       <select id="event-select" onchange="onEventChange()"></select>
@@ -235,10 +235,21 @@ function saveGasUrl(){
   GAS_URL=url;localStorage.setItem("gas_url",url);showMain();
 }
 function switchTab(name){
-  document.querySelectorAll(".tab").forEach(function(t,i){t.classList.toggle("active",["summary","manual","roster"][i]===name);});
-  document.querySelectorAll(".tab-panel").forEach(function(p){p.classList.remove("active");});
-  document.getElementById("tab-"+name).classList.add("active");
-  if(name==="roster" && document.getElementById("event-select-roster").options.length<=1) loadEvents();
+  // タブボタンの切替
+  var tabNames = ["summary","manual","roster"];
+  document.querySelectorAll(".tab").forEach(function(t,i){
+    t.classList.toggle("active", tabNames[i] === name);
+  });
+  // タブパネルの切替
+  tabNames.forEach(function(n){
+    var el = document.getElementById("tab-"+n);
+    if(el) el.style.display = (n === name) ? "block" : "none";
+  });
+  // 名簿タブ初回表示時に研修会リストを読み込む
+  if(name === "roster"){
+    var sel = document.getElementById("event-select-roster");
+    if(sel && sel.options.length <= 1) loadEvents();
+  }
 }
 function loadEvents(){
   jsonp(GAS_URL+"?action=getEvents",function(err,events){
