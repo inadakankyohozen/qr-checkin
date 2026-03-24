@@ -89,13 +89,17 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
 /* 印刷用スタイル */
 @media print {
   header,.tabs,.event-select-wrap,.metrics,.reload-btn,.csv-btn,.print-btn,.reload-roster-btn,
-  #tab-summary,#tab-manual,.section-title{display:none!important;}
-  body{background:#fff;}
-  #tab-roster{display:block!important;padding:0;}
-  .roster-print-header{display:block!important;}
-  .roster-table{box-shadow:none;border:1px solid #ddd;}
+  #tab-summary,#tab-manual,.section-title,#setup-screen,
+  .roster-header{display:none!important;}
+  body{background:#fff;margin:0;padding:0;}
+  #main-screen{display:block!important;}
+  #tab-roster{display:block!important;padding:8px 12px;}
+  .roster-print-header{display:block!important;margin-bottom:12px;}
+  #roster-meta-card{display:none!important;}
+  .roster-table{box-shadow:none;border:1px solid #ddd;margin-top:0;}
   .roster-table th{background:#1a5276!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  #print-timestamp{display:block!important;}
+  #print-timestamp{display:block!important;margin-bottom:6px;}
+  @page{margin:10mm;}
 }
 .roster-print-header{display:none;text-align:center;margin-bottom:20px;}
 .roster-print-header h2{font-size:20px;font-weight:700;margin-bottom:6px;}
@@ -126,6 +130,39 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
     <div class="tab" onclick="switchTab('manual')">手動受付</div>
     <div class="tab" onclick="switchTab('roster')">名簿印刷</div>
   </div>
+<div class="tab-panel" id="tab-roster">
+  <div class="roster-header">
+    <div class="event-select-wrap" style="margin-bottom:0;box-shadow:none;padding:0;">
+      <label>行事を選択してください</label>
+      <select id="event-select-roster" onchange="onRosterEventChange()"></select>
+    </div>
+  </div>
+  <div id="roster-meta-card" style="display:none;" class="roster-header">
+    <div class="roster-meta" id="roster-meta"></div>
+    <button class="print-btn" onclick="printRoster()">印刷 / PDF保存</button>
+    <button class="reload-btn reload-roster-btn" onclick="loadRoster()" style="margin-top:8px;">最新情報に更新</button>
+  </div>
+  <div class="roster-print-header" id="roster-print-header">
+    <h2 id="print-title"></h2>
+    <p id="print-meta"></p>
+  </div>
+  <div id="print-timestamp"></div>
+  <table class="roster-table" id="roster-table" style="display:none;">
+    <thead>
+      <tr>
+        <th class="no">No.</th>
+        <th>事業所名</th>
+        <th>氏名</th>
+        <th>受付時刻</th>
+        <th>受付方法</th>
+      </tr>
+    </thead>
+    <tbody id="roster-body">
+    </tbody>
+  </table>
+  <div id="roster-empty" style="text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;">出席記録がありません</div>
+</div>
+
   <div class="tab-panel" id="tab-summary" style="display:block;">
     <div class="event-select-wrap">
       <label>研修会</label>
@@ -161,38 +198,6 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
     <div id="no-results">検索結果がありません</div>
     <div id="search-results"></div>
   </div>
-</div>
-<div class="tab-panel" id="tab-roster">
-  <div class="roster-header">
-    <div class="event-select-wrap" style="margin-bottom:0;box-shadow:none;padding:0;">
-      <label>行事を選択してください</label>
-      <select id="event-select-roster" onchange="onRosterEventChange()"></select>
-    </div>
-  </div>
-  <div id="roster-meta-card" style="display:none;" class="roster-header">
-    <div class="roster-meta" id="roster-meta"></div>
-    <button class="print-btn" onclick="printRoster()">印刷 / PDF保存</button>
-    <button class="reload-btn reload-roster-btn" onclick="loadRoster()" style="margin-top:8px;">最新情報に更新</button>
-  </div>
-  <div class="roster-print-header" id="roster-print-header">
-    <h2 id="print-title"></h2>
-    <p id="print-meta"></p>
-  </div>
-  <div id="print-timestamp"></div>
-  <table class="roster-table" id="roster-table" style="display:none;">
-    <thead>
-      <tr>
-        <th class="no">No.</th>
-        <th>事業所名</th>
-        <th>氏名</th>
-        <th>受付時刻</th>
-        <th>受付方法</th>
-      </tr>
-    </thead>
-    <tbody id="roster-body">
-    </tbody>
-  </table>
-  <div id="roster-empty" style="text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;">出席記録がありません</div>
 </div>
 
 <div id="popup">
