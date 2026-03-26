@@ -5,35 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>青年部会 受付</title>
+<title>受付</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: -apple-system, "Hiragino Sans", sans-serif;
-  background: #f0f4f8;
+  background: #1a5276;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
-
-/* ===== 初回設定画面 ===== */
+/* 初回設定 */
 #setup-screen {
-  display: none;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 20px;
-  flex-direction: column;
-  gap: 16px;
+  display: none; flex: 1;
+  align-items: center; justify-content: center;
+  padding: 32px 20px; flex-direction: column; gap: 16px;
+  background: #f0f4f8;
 }
 #setup-screen.active { display: flex; }
 .setup-card {
-  background: #fff;
-  border-radius: 20px;
-  padding: 28px 24px;
-  width: 100%;
-  max-width: 480px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  background: #fff; border-radius: 20px; padding: 28px 24px;
+  width: 100%; max-width: 480px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 .setup-card h2 { font-size: 18px; color: #1a5276; margin-bottom: 6px; font-weight: 700; }
 .setup-card p  { font-size: 13px; color: #666; line-height: 1.7; margin-bottom: 20px; }
@@ -43,65 +36,64 @@ body {
   border: 1.5px solid #ddd; border-radius: 10px;
   margin-bottom: 16px; background: #f8f9fa;
 }
-.setup-card input:focus { outline: none; border-color: #1a5276; background: #fff; }
+.setup-card input:focus { outline: none; border-color: #1a5276; }
 .setup-save-btn {
-  width: 100%; padding: 14px;
-  background: #1a5276; color: #fff;
-  border: none; border-radius: 12px;
-  font-size: 16px; font-weight: 600; cursor: pointer;
+  width: 100%; padding: 14px; background: #1a5276; color: #fff;
+  border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
 }
 .setup-hint {
   font-size: 12px; color: #888; background: #f0f4f8;
   border-radius: 8px; padding: 10px 14px; line-height: 1.7;
 }
-
-/* ===== メイン受付画面 ===== */
-#main-screen { display: none; flex-direction: column; flex: 1; }
+/* メイン */
+#main-screen { display: none; flex-direction: column; height: 100vh; }
 #main-screen.active { display: flex; }
-
-header {
-  background: #1a5276; color: #fff;
-  padding: 14px 20px;
+/* トップバー */
+#top-bar {
+  background: #154360;
+  padding: 10px 16px;
   display: flex; justify-content: space-between; align-items: center;
   flex-shrink: 0;
 }
-header h1 { font-size: 18px; font-weight: 600; }
+#org-name { font-size: 14px; font-weight: 600; color: #fff; letter-spacing: 0.3px; }
+#top-right { display: flex; align-items: center; gap: 8px; }
 #event-badge {
-  font-size: 12px; background: rgba(255,255,255,0.2);
-  border-radius: 20px; padding: 4px 12px;
+  font-size: 11px; background: rgba(255,255,255,0.2);
+  border-radius: 20px; padding: 3px 10px;
   max-width: 180px; overflow: hidden;
-  text-overflow: ellipsis; white-space: nowrap;
+  text-overflow: ellipsis; white-space: nowrap; color: #fff;
 }
 #settings-btn {
   background: rgba(255,255,255,0.15); border: none; color: #fff;
-  width: 32px; height: 32px; border-radius: 50%;
-  font-size: 16px; cursor: pointer; display: flex;
+  width: 30px; height: 30px; border-radius: 50%;
+  font-size: 15px; cursor: pointer;
+}
+/* 2分割レイアウト */
+#content-wrap { flex: 1; display: flex; overflow: hidden; }
+/* 左パネル */
+#left-panel {
+  flex: 0 0 48%;
+  display: flex; flex-direction: column;
   align-items: center; justify-content: center;
+  padding: 12px; gap: 10px;
+  background: #1a5276;
 }
-
-.main-wrap {
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; padding: 20px 16px; gap: 16px;
+#event-selector-wrap { width: 100%; }
+#event-selector-wrap label {
+  font-size: 11px; color: rgba(255,255,255,0.7); display: block; margin-bottom: 3px;
 }
-
-/* 研修会選択 */
-#event-selector-card {
-  background: #fff; border-radius: 16px; padding: 16px 20px;
-  width: 100%; max-width: 540px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-#event-selector-card h2 { font-size: 14px; color: #555; margin-bottom: 8px; }
 #event-select {
-  width: 100%; font-size: 16px; padding: 10px 14px;
-  border: 1.5px solid #c0c0c0; border-radius: 10px;
-  background: #fff; -webkit-appearance: none; cursor: pointer;
+  width: 100%; font-size: 13px; padding: 7px 10px;
+  border: 1.5px solid rgba(255,255,255,0.3); border-radius: 10px;
+  background: rgba(255,255,255,0.1); color: #fff;
+  -webkit-appearance: none; cursor: pointer;
 }
-
+#event-select option { color: #333; background: #fff; }
 /* カメラ */
 #camera-card {
-  background: #000; border-radius: 20px; overflow: hidden;
-  width: 100%; max-width: 420px; aspect-ratio: 1/1;
-  position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  background: #000; border-radius: 14px; overflow: hidden;
+  width: 100%; aspect-ratio: 1/1; position: relative;
+  border: 3px solid rgba(255,255,255,0.25);
 }
 #video { width: 100%; height: 100%; object-fit: cover; display: block; }
 #scan-frame {
@@ -110,362 +102,381 @@ header h1 { font-size: 18px; font-weight: 600; }
   pointer-events: none;
 }
 .corner {
-  position: absolute; width: 56px; height: 56px;
+  position: absolute; width: 44px; height: 44px;
   border-color: #fff; border-style: solid; opacity: 0.9;
 }
-.corner.tl { top:20%; left:20%;   border-width:3px 0 0 3px; border-radius:4px 0 0 0; }
-.corner.tr { top:20%; right:20%;  border-width:3px 3px 0 0; border-radius:0 4px 0 0; }
-.corner.bl { bottom:20%; left:20%;  border-width:0 0 3px 3px; border-radius:0 0 0 4px; }
-.corner.br { bottom:20%; right:20%; border-width:0 3px 3px 0; border-radius:0 0 4px 0; }
+.corner.tl { top:18%; left:18%; border-width:3px 0 0 3px; }
+.corner.tr { top:18%; right:18%; border-width:3px 3px 0 0; }
+.corner.bl { bottom:18%; left:18%; border-width:0 0 3px 3px; }
+.corner.br { bottom:18%; right:18%; border-width:0 3px 3px 0; }
 #scan-line {
-  position: absolute; left:20%; right:20%; height:2px;
-  background: linear-gradient(90deg, transparent, #3ae, transparent);
-  animation: scanline 2s ease-in-out infinite;
+  position: absolute; left:18%; right:18%; height:2px;
+  background: linear-gradient(90deg, transparent, #4cf, transparent);
+  animation: scan 2s ease-in-out infinite;
 }
-@keyframes scanline { 0%,100%{top:20%} 50%{top:78%} }
+@keyframes scan { 0%,100%{top:18%} 50%{top:80%} }
 #camera-hint {
-  position: absolute; bottom:14px; left:0; right:0;
+  position: absolute; bottom:8px; left:0; right:0;
   text-align: center; color: rgba(255,255,255,0.85);
-  font-size: 13px; font-weight: 500;
+  font-size: 11px; font-weight: 500;
 }
 #start-btn {
-  position: absolute; bottom:20px; left:50%; transform:translateX(-50%);
+  position: absolute; bottom:14px; left:50%; transform:translateX(-50%);
   background:#1a5276; color:#fff; border:none;
-  padding:14px 32px; border-radius:28px;
-  font-size:16px; font-weight:600; cursor:pointer; z-index:10;
-  white-space:nowrap; box-shadow:0 4px 12px rgba(0,0,0,0.3);
+  padding:10px 20px; border-radius:22px;
+  font-size:13px; font-weight:600; cursor:pointer; z-index:10;
+  white-space:nowrap;
 }
 #canvas { display: none; }
-
+/* カメラ切替 */
+#camera-controls { width: 100%; display: flex; justify-content: center; gap: 8px; }
+#camera-flip-btn {
+  background: rgba(255,255,255,0.15); color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.3);
+  padding: 6px 16px; border-radius: 18px;
+  font-size: 12px; cursor: pointer; font-weight: 500;
+  display: none; align-items: center; gap: 4px;
+}
+#camera-mode-label {
+  font-size: 11px; color: rgba(255,255,255,0.55); text-align: center;
+}
+/* 右パネル */
+#right-panel {
+  flex: 1; display: flex; flex-direction: column;
+  background: #f0f4f8; overflow-y: auto;
+}
+/* 時計 */
+#datetime-block {
+  background: #fff; padding: 16px 20px 12px;
+  border-bottom: 1px solid #e8ecf0; flex-shrink: 0;
+}
+#date-display { font-size: 14px; color: #666; font-weight: 500; margin-bottom: 0; }
+#time-display { font-size: 48px; font-weight: 700; color: #1a5276; line-height: 1; letter-spacing: -2px; }
+#time-seconds { font-size: 26px; color: #aaa; font-weight: 400; }
 /* 結果 */
 #result-card {
-  width:100%; max-width:540px; border-radius:16px; padding:20px 24px;
-  display:none; box-shadow:0 4px 16px rgba(0,0,0,0.1);
+  margin: 12px 14px 0; border-radius: 14px; padding: 16px;
+  display: none; flex-shrink: 0;
 }
 #result-card.success { background:#eafaf1; border:2px solid #27ae60; }
 #result-card.error   { background:#fef9e7; border:2px solid #e67e22; }
 #result-card.dup     { background:#fef5f5; border:2px solid #e74c3c; }
-.result-icon    { font-size:40px; text-align:center; margin-bottom:8px; }
-.result-name    { font-size:22px; font-weight:700; text-align:center; color:#1a1a1a; }
-.result-company { font-size:15px; text-align:center; color:#555; margin-top:4px; }
-.result-msg     { font-size:14px; text-align:center; margin-top:10px; color:#333; }
-
+.result-icon    { font-size:32px; text-align:center; margin-bottom:4px; }
+.result-name    { font-size:18px; font-weight:700; text-align:center; color:#1a1a1a; }
+.result-company { font-size:12px; text-align:center; color:#555; margin-top:2px; }
+.result-msg     { font-size:12px; text-align:center; margin-top:6px; color:#333; }
 /* カウンター */
 #counter-card {
-  background:#fff; border-radius:16px; padding:16px 20px;
-  width:100%; max-width:540px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.06);
+  margin: 10px 14px 8px;
+  background:#fff; border-radius:12px; padding:12px 14px;
   display:flex; align-items:center; justify-content:space-between;
+  flex-shrink: 0;
 }
 .count-box { text-align:center; flex:1; }
-.count-label { font-size:12px; color:#888; }
-.count-num   { font-size:28px; font-weight:700; color:#1a5276; }
-.count-divider { width:1px; height:40px; background:#e0e0e0; }
-
+.count-label { font-size:10px; color:#888; }
+.count-num   { font-size:24px; font-weight:700; color:#1a5276; }
+.count-divider { width:1px; height:32px; background:#e0e0e0; }
 /* 直近リスト */
 #recent-card {
-  background:#fff; border-radius:16px; padding:16px 20px;
-  width:100%; max-width:540px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.06);
+  margin: 0 14px 14px;
+  background:#fff; border-radius:12px; padding:12px 14px;
+  flex-shrink: 0;
 }
-#recent-card h3 { font-size:13px; color:#888; margin-bottom:10px; }
+#recent-card h3 { font-size:11px; color:#888; margin-bottom:7px; }
 #recent-list { list-style:none; }
 #recent-list li {
   display:flex; justify-content:space-between; align-items:center;
-  padding:7px 0; border-bottom:1px solid #f0f0f0; font-size:14px;
+  padding:5px 0; border-bottom:1px solid #f0f0f0; font-size:12px;
 }
 #recent-list li:last-child { border-bottom:none; }
 .recent-name    { font-weight:600; }
-.recent-company { color:#777; font-size:12px; }
-.recent-time    { color:#aaa; font-size:12px; white-space:nowrap; }
-
+.recent-company { color:#777; font-size:10px; }
+.recent-time    { color:#aaa; font-size:10px; white-space:nowrap; }
 #no-camera {
-  color:#fff; padding:24px 16px;
-  text-align:center; font-size:14px; line-height:1.8;
+  color:#fff; padding:16px 10px;
+  text-align:center; font-size:12px; line-height:1.8;
 }
 #no-camera button {
-  margin-top:14px; background:#1a5276; color:#fff;
-  border:none; padding:10px 24px; border-radius:8px;
-  font-size:14px; cursor:pointer;
+  margin-top:10px; background:#1a5276; color:#fff;
+  border:none; padding:7px 16px; border-radius:8px;
+  font-size:12px; cursor:pointer;
 }
 </style>
 </head>
 <body>
 
-<!-- ===== 初回設定画面 ===== -->
 <div id="setup-screen">
   <div class="setup-card">
     <h2>初回設定</h2>
-    <p>GASのWebアプリURLを入力してください。<br>一度入力すると次回から自動で読み込まれます。</p>
+    <p>GASのWebアプリURLを入力してください。</p>
     <label>GAS WebアプリURL</label>
     <input type="url" id="gas-url-input" placeholder="https://script.google.com/macros/s/.../exec">
     <button class="setup-save-btn" onclick="saveGasUrl()">保存して受付を開始</button>
   </div>
-  <div class="setup-hint">
-    GASエディタ → デプロイ → デプロイを管理 → URLをコピーして貼り付けてください
-  </div>
+  <div class="setup-hint">GASエディタ → デプロイ → デプロイを管理 → URLをコピーして貼り付けてください</div>
 </div>
 
-<!-- ===== メイン受付画面 ===== -->
 <div id="main-screen">
-  <header>
-    <h1>QRコード受付</h1>
-    <span id="event-badge">研修会未選択</span>
-    <button id="settings-btn" onclick="showSetup()" title="設定">⚙</button>
-  </header>
+  <div id="top-bar">
+    <span id="org-name">千葉県環境保全センター 青年部会</span>
+    <div id="top-right">
+      <span id="event-badge">行事未選択</span>
+      <button id="settings-btn" onclick="showSetup()">⚙</button>
+    </div>
+  </div>
 
-  <div class="main-wrap">
-    <div id="event-selector-card">
-      <h2>研修会を選択してください</h2>
-      <select id="event-select" onchange="onEventChange()">
-        <option value="">-- 読み込み中... --</option>
-      </select>
+  <div id="content-wrap">
+    <div id="left-panel">
+      <div id="event-selector-wrap">
+        <label>行事を選択</label>
+        <select id="event-select" onchange="onEventChange()">
+          <option value="">-- 読み込み中... --</option>
+        </select>
+      </div>
+
+      <div id="camera-card">
+        <video id="video" autoplay muted playsinline webkit-playsinline></video>
+        <div id="scan-frame">
+          <div class="corner tl"></div><div class="corner tr"></div>
+          <div class="corner bl"></div><div class="corner br"></div>
+          <div id="scan-line"></div>
+        </div>
+        <div id="camera-hint">下のボタンをタップしてカメラを起動</div>
+        <canvas id="canvas"></canvas>
+        <button id="start-btn" onclick="startCamera()">タップしてカメラを起動</button>
+      </div>
+
+      <div id="camera-controls">
+        <button id="camera-flip-btn" onclick="flipCamera()">🔄 カメラ切替</button>
+      </div>
+      <div id="camera-mode-label"></div>
     </div>
 
-    <div id="camera-card">
-      <video id="video" autoplay muted playsinline webkit-playsinline></video>
-      <div id="scan-frame">
-        <div class="corner tl"></div><div class="corner tr"></div>
-        <div class="corner bl"></div><div class="corner br"></div>
-        <div id="scan-line"></div>
+    <div id="right-panel">
+      <div id="datetime-block">
+        <div id="date-display"></div>
+        <div id="time-display">
+          <span id="time-hm">00:00</span><span id="time-seconds">:00</span>
+        </div>
       </div>
-      <div id="camera-hint">下のボタンをタップしてカメラを起動</div>
-      <canvas id="canvas"></canvas>
-      <button id="start-btn" onclick="startCamera()">タップしてカメラを起動</button>
-    </div>
 
-    <div id="result-card">
-      <div class="result-icon"    id="result-icon"></div>
-      <div class="result-name"    id="result-name"></div>
-      <div class="result-company" id="result-company"></div>
-      <div class="result-msg"     id="result-msg"></div>
-    </div>
+      <div id="result-card">
+        <div class="result-icon"    id="result-icon"></div>
+        <div class="result-name"    id="result-name"></div>
+        <div class="result-company" id="result-company"></div>
+        <div class="result-msg"     id="result-msg"></div>
+      </div>
 
-    <div id="counter-card">
-      <div class="count-box">
-        <div class="count-label">出席済み</div>
-        <div class="count-num" id="cnt-attended">-</div>
+      <div id="counter-card">
+        <div class="count-box">
+          <div class="count-label">出席済み</div>
+          <div class="count-num" id="cnt-attended">-</div>
+        </div>
+        <div class="count-divider"></div>
+        <div class="count-box">
+          <div class="count-label">参加予定</div>
+          <div class="count-num" id="cnt-total">-</div>
+        </div>
+        <div class="count-divider"></div>
+        <div class="count-box">
+          <div class="count-label">未受付</div>
+          <div class="count-num" id="cnt-remain" style="color:#e74c3c;">-</div>
+        </div>
       </div>
-      <div class="count-divider"></div>
-      <div class="count-box">
-        <div class="count-label">参加予定</div>
-        <div class="count-num" id="cnt-total">-</div>
-      </div>
-      <div class="count-divider"></div>
-      <div class="count-box">
-        <div class="count-label">未受付</div>
-        <div class="count-num" id="cnt-remain" style="color:#e74c3c;">-</div>
-      </div>
-    </div>
 
-    <div id="recent-card">
-      <h3>直近の受付</h3>
-      <ul id="recent-list">
-        <li style="color:#ccc;font-size:13px;justify-content:center;">まだ受付はありません</li>
-      </ul>
+      <div id="recent-card">
+        <h3>直近の受付</h3>
+        <ul id="recent-list">
+          <li style="color:#ccc;font-size:11px;justify-content:center;">まだ受付はありません</li>
+        </ul>
+      </div>
     </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script>
-var GAS_URL        = "";
-var currentEventId = "";
-var isProcessing   = false;
-var scanning       = false;
-var cbCount        = 0; // JSONPコールバック連番
+var GAS_URL="",currentEventId="",isProcessing=false,scanning=false,cbCount=0;
+var currentFacing="environment";
 
-// ===== JSONP通信（CORSを回避） =====
-function jsonp(url, callback) {
-  var cbName = "__gasCallback" + (cbCount++);
-  window[cbName] = function(data) {
-    delete window[cbName];
-    document.head.removeChild(script);
-    callback(null, data);
-  };
-  var script = document.createElement("script");
-  script.src = url + (url.indexOf("?") >= 0 ? "&" : "?") + "callback=" + cbName;
-  script.onerror = function() {
-    delete window[cbName];
-    document.head.removeChild(script);
-    callback(new Error("通信エラー"), null);
-  };
-  document.head.appendChild(script);
+function jsonp(url,cb){
+  var n="__cb"+(cbCount++);
+  window[n]=function(d){delete window[n];if(s.parentNode)s.parentNode.removeChild(s);cb(null,d);};
+  var s=document.createElement("script");
+  s.src=url+(url.indexOf("?")>=0?"&":"?")+"callback="+n;
+  s.onerror=function(){delete window[n];if(s.parentNode)s.parentNode.removeChild(s);cb(new Error("error"),null);};
+  document.head.appendChild(s);
 }
 
-// ===== 起動時: URLが保存済みかチェック =====
-window.addEventListener("load", function() {
-  var saved = localStorage.getItem("gas_url");
-  if (saved && saved.indexOf("https://script.google.com") === 0) {
-    GAS_URL = saved;
-    showMain();
-  } else {
-    showSetup();
-  }
+window.addEventListener("load",function(){
+  var saved=localStorage.getItem("gas_url");
+  if(saved&&saved.indexOf("https://script.google.com")===0){GAS_URL=saved;showMain();}
+  else{showSetup();}
+  startClock();
 });
 
-function showSetup() {
+function showSetup(){
   document.getElementById("setup-screen").classList.add("active");
   document.getElementById("main-screen").classList.remove("active");
-  var saved = localStorage.getItem("gas_url");
-  if (saved) document.getElementById("gas-url-input").value = saved;
+  var saved=localStorage.getItem("gas_url");
+  if(saved)document.getElementById("gas-url-input").value=saved;
 }
-
-function showMain() {
+function showMain(){
   document.getElementById("setup-screen").classList.remove("active");
   document.getElementById("main-screen").classList.add("active");
   loadEvents();
 }
-
-function saveGasUrl() {
-  var url = document.getElementById("gas-url-input").value.trim();
-  if (!url || url.indexOf("https://script.google.com") !== 0) {
-    alert("正しいGAS URLを入力してください。\nhttps://script.google.com/macros/s/... の形式です。");
-    return;
-  }
-  GAS_URL = url;
-  localStorage.setItem("gas_url", url);
-  showMain();
+function saveGasUrl(){
+  var url=document.getElementById("gas-url-input").value.trim();
+  if(!url||url.indexOf("https://script.google.com")!==0){alert("正しいGAS URLを入力してください。");return;}
+  GAS_URL=url;localStorage.setItem("gas_url",url);showMain();
 }
 
-// ===== 研修会一覧 =====
-function loadEvents() {
-  jsonp(GAS_URL + "?action=getEvents", function(err, events) {
-    var sel = document.getElementById("event-select");
-    if (err || !events) {
-      sel.innerHTML = '<option>読み込みエラー。URLを確認してください</option>';
-      return;
-    }
-    sel.innerHTML = '<option value="">-- 選択してください --</option>';
-    events.forEach(function(ev) {
-      var opt = document.createElement("option");
-      opt.value = ev.id;
-      opt.textContent = ev.name + "（" + ev.date + "）";
-      sel.appendChild(opt);
+// 時計
+function startClock(){
+  function tick(){
+    var now=new Date();
+    var days=["日","月","火","水","木","金","土"];
+    var y=now.getFullYear(),mo=now.getMonth()+1,d=now.getDate(),day=days[now.getDay()];
+    var h=String(now.getHours()).padStart(2,"0");
+    var mi=String(now.getMinutes()).padStart(2,"0");
+    var s=String(now.getSeconds()).padStart(2,"0");
+    document.getElementById("date-display").textContent=y+"年"+mo+"月"+d+"日（"+day+"）";
+    document.getElementById("time-hm").textContent=h+":"+mi;
+    document.getElementById("time-seconds").textContent=":"+s;
+  }
+  tick();setInterval(tick,1000);
+}
+
+// 研修会一覧
+function loadEvents(){
+  jsonp(GAS_URL+"?action=getEvents",function(err,events){
+    var sel=document.getElementById("event-select");
+    if(err||!events){sel.innerHTML='<option>読み込みエラー</option>';return;}
+    sel.innerHTML='<option value="">-- 選択してください --</option>';
+    events.forEach(function(ev){
+      var opt=document.createElement("option");
+      opt.value=ev.id;opt.textContent=ev.name+"（"+ev.date+"）";sel.appendChild(opt);
     });
   });
 }
 
-// ===== カメラ起動 =====
-function startCamera() {
-  document.getElementById("start-btn").style.display = "none";
-  document.getElementById("camera-hint").textContent = "起動中...";
+// カメラ起動
+function startCamera(){
+  document.getElementById("start-btn").style.display="none";
+  document.getElementById("camera-hint").textContent="起動中...";
+  launchCamera(currentFacing);
+}
+
+function launchCamera(facing){
+  var video=document.getElementById("video");
+  if(video.srcObject){video.srcObject.getTracks().forEach(function(t){t.stop();});video.srcObject=null;}
+  scanning=false;
 
   navigator.mediaDevices.getUserMedia({
-    video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
-    audio: false
+    video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:720}},audio:false
   })
-  .then(function(stream) {
-    var video = document.getElementById("video");
-    video.srcObject = stream;
-    video.play().then(function() {
-      scanning = true;
-      document.getElementById("camera-hint").textContent = "QRコードを枠内に合わせてください";
+  .then(function(stream){
+    video.srcObject=stream;
+    video.play().then(function(){
+      scanning=true;currentFacing=facing;
+      document.getElementById("camera-hint").textContent="QRコードを枠内に合わせてください";
+      document.getElementById("camera-flip-btn").style.display="flex";
+      document.getElementById("camera-mode-label").textContent=
+        facing==="environment"?"アウトカメラ使用中":"インカメラ使用中";
       requestAnimationFrame(scanFrame);
     });
   })
-  .catch(function(err) {
-    var msg = err.name === "NotAllowedError"
-      ? "カメラが許可されていません。\n設定 → プライバシーとセキュリティ → カメラ → Safari をオンにしてください。"
-      : "カメラエラー: " + err.name;
-    document.getElementById("camera-card").innerHTML =
-      '<div id="no-camera">' + msg.replace(/\n/g,"<br>") +
-      '<br><button onclick="location.reload()">再試行</button></div>';
+  .catch(function(err){
+    var msg=err.name==="NotAllowedError"
+      ?"カメラが許可されていません。\n設定 → プライバシー → カメラ → Safari をオンにしてください。"
+      :"カメラエラー: "+err.name;
+    document.getElementById("camera-card").innerHTML=
+      '<div id="no-camera">'+msg.replace(/\n/g,"<br>")+'<br><button onclick="location.reload()">再試行</button></div>';
   });
 }
 
-// ===== QRスキャンループ =====
-function scanFrame() {
-  if (!scanning) return;
-  var video  = document.getElementById("video");
-  var canvas = document.getElementById("canvas");
-  if (video && video.readyState === video.HAVE_ENOUGH_DATA) {
-    canvas.width  = video.videoWidth;
-    canvas.height = video.videoHeight;
-    var ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
-    if (code && !isProcessing && currentEventId) {
-      handleQRCode(code.data);
-    }
+// カメラ切替
+function flipCamera(){
+  var newFacing=(currentFacing==="environment")?"user":"environment";
+  document.getElementById("camera-mode-label").textContent="切替中...";
+  launchCamera(newFacing);
+}
+
+// スキャンループ
+function scanFrame(){
+  if(!scanning)return;
+  var video=document.getElementById("video");
+  var canvas=document.getElementById("canvas");
+  if(video&&video.readyState===video.HAVE_ENOUGH_DATA){
+    canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+    var ctx=canvas.getContext("2d");ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    var img=ctx.getImageData(0,0,canvas.width,canvas.height);
+    var code=jsQR(img.data,img.width,img.height,{inversionAttempts:"dontInvert"});
+    if(code&&!isProcessing&&currentEventId)handleQRCode(code.data);
   }
   requestAnimationFrame(scanFrame);
 }
 
-// ===== QR照合 =====
-function handleQRCode(data) {
-  if (isProcessing) return;
-  isProcessing = true;
-  showResult("loading", "処理中...", "", "");
-
-  // Base64の末尾 = はURLパラメータで文字化けするため除去（GAS側で復元）
-  var safeData = data.replace(/=+$/, "");
-  var url = GAS_URL + "?action=checkin"
-    + "&encoded=" + encodeURIComponent(safeData)
-    + "&eventId=" + encodeURIComponent(currentEventId);
-
-  jsonp(url, function(err, result) {
-    if (err || !result) {
-      showResult("error", "通信エラー", "", "再度お試しください");
-      setTimeout(function() { hideResult(); isProcessing = false; }, 3000);
-      return;
+// QR照合
+function handleQRCode(data){
+  if(isProcessing)return;
+  isProcessing=true;
+  showResult("loading","処理中...","","");
+  var safeData=data.replace(/=+$/,"");
+  var url=GAS_URL+"?action=checkin&encoded="+encodeURIComponent(safeData)+"&eventId="+encodeURIComponent(currentEventId);
+  jsonp(url,function(err,result){
+    if(err||!result){
+      showResult("error","通信エラー","","再度お試しください");
+      setTimeout(function(){hideResult();isProcessing=false;},3000);return;
     }
-    if (result.ok) {
-      showResult("success", result.name, result.company, "受付完了  " + result.time);
-    } else if (result.duplicate) {
-      showResult("dup", result.name, result.company, result.msg);
-    } else {
-      showResult("error", result.name || "エラー", result.company || "", result.msg);
-    }
+    if(result.ok)showResult("success",result.name,result.company,"受付完了  "+result.time);
+    else if(result.duplicate)showResult("dup",result.name,result.company,result.msg);
+    else showResult("error",result.name||"エラー",result.company||"",result.msg);
     updateSummary();
-    setTimeout(function() { hideResult(); isProcessing = false; }, 3500);
+    setTimeout(function(){hideResult();isProcessing=false;},3500);
   });
 }
 
-function showResult(type, name, company, msg) {
-  var card = document.getElementById("result-card");
-  card.style.display = "block";
-  card.className = "";
-  var icons = { success:"✅", error:"⚠️", dup:"🔁", loading:"⏳" };
-  document.getElementById("result-icon").textContent    = icons[type] || "❓";
-  document.getElementById("result-name").textContent    = name;
-  document.getElementById("result-company").textContent = company;
-  document.getElementById("result-msg").textContent     = msg;
-  card.classList.add(type === "success" ? "success" : type === "dup" ? "dup" : "error");
+function showResult(type,name,company,msg){
+  var card=document.getElementById("result-card");
+  card.style.display="block";card.className="";
+  var icons={success:"✅",error:"⚠️",dup:"🔁",loading:"⏳"};
+  document.getElementById("result-icon").textContent=icons[type]||"❓";
+  document.getElementById("result-name").textContent=name;
+  document.getElementById("result-company").textContent=company;
+  document.getElementById("result-msg").textContent=msg;
+  card.classList.add(type==="success"?"success":type==="dup"?"dup":"error");
 }
-function hideResult() {
-  document.getElementById("result-card").style.display = "none";
+function hideResult(){document.getElementById("result-card").style.display="none";}
+
+function onEventChange(){
+  var sel=document.getElementById("event-select");
+  currentEventId=sel.value;
+  document.getElementById("event-badge").textContent=
+    currentEventId?sel.options[sel.selectedIndex].textContent:"行事未選択";
+  if(currentEventId)updateSummary();
 }
 
-function onEventChange() {
-  var sel = document.getElementById("event-select");
-  currentEventId = sel.value;
-  document.getElementById("event-badge").textContent =
-    currentEventId ? sel.options[sel.selectedIndex].textContent : "研修会未選択";
-  if (currentEventId) updateSummary();
-}
-
-function updateSummary() {
-  if (!currentEventId) return;
-  var url = GAS_URL + "?action=summary&eventId=" + encodeURIComponent(currentEventId);
-  jsonp(url, function(err, s) {
-    if (err || !s) return;
-    document.getElementById("cnt-attended").textContent = s.attended;
-    document.getElementById("cnt-total").textContent    = s.total || "-";
-    document.getElementById("cnt-remain").textContent   = s.total > 0 ? (s.total - s.attended) : "-";
-    var ul = document.getElementById("recent-list");
-    if (s.recent && s.recent.length > 0) {
-      ul.innerHTML = s.recent.map(function(r) {
-        return '<li><div><div class="recent-name">' + r.name + '</div>'
-          + '<div class="recent-company">' + r.company + '</div></div>'
-          + '<div class="recent-time">' + r.time + '</div></li>';
+function updateSummary(){
+  if(!currentEventId)return;
+  jsonp(GAS_URL+"?action=summary&eventId="+encodeURIComponent(currentEventId),function(err,s){
+    if(err||!s)return;
+    document.getElementById("cnt-attended").textContent=s.attended;
+    document.getElementById("cnt-total").textContent=s.total||"-";
+    document.getElementById("cnt-remain").textContent=s.total>0?(s.total-s.attended):"-";
+    var ul=document.getElementById("recent-list");
+    if(s.recent&&s.recent.length>0){
+      ul.innerHTML=s.recent.map(function(r){
+        return'<li><div><div class="recent-name">'+r.name+'</div>'
+          +'<div class="recent-company">'+r.company+'</div></div>'
+          +'<div class="recent-time">'+r.time+'</div></li>';
       }).join("");
     }
   });
 }
 
-setInterval(function() { if (currentEventId) updateSummary(); }, 30000);
+setInterval(function(){if(currentEventId)updateSummary();},30000);
 </script>
 </body>
 </html>
