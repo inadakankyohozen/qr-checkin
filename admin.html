@@ -75,6 +75,31 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
 .popup-close{margin-top:20px;padding:12px 32px;background:#1a5276;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;}
 #no-results{text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;}
 
+/* タップ可能なメトリクスカード */
+.metric-card.tappable{cursor:pointer;transition:transform 0.1s,box-shadow 0.1s;}
+.metric-card.tappable:hover{box-shadow:0 4px 16px rgba(0,0,0,0.12);}
+.metric-card.tappable:active{transform:scale(0.97);}
+.metric-tap-hint{font-size:10px;color:#aaa;margin-top:2px;}
+
+/* 一覧モーダル */
+#list-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;padding:20px;align-items:flex-start;justify-content:center;overflow-y:auto;}
+#list-modal.show{display:flex;}
+.list-modal-card{background:#fff;border-radius:16px;width:100%;max-width:560px;overflow:hidden;margin:auto;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
+.list-modal-header{background:#1a5276;color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;}
+.list-modal-header h3{font-size:16px;font-weight:600;margin:0;}
+.list-modal-close{background:rgba(255,255,255,0.2);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.list-modal-body{padding:0;max-height:70vh;overflow-y:auto;}
+.list-modal-count{font-size:13px;color:#888;padding:10px 16px;border-bottom:0.5px solid #f0f0f0;}
+.list-item{display:flex;align-items:center;padding:11px 16px;border-bottom:0.5px solid #f0f0f0;gap:10px;}
+.list-item:last-child{border-bottom:none;}
+.list-item-info{flex:1;}
+.list-item-name{font-size:14px;font-weight:600;color:#1a1a1a;}
+.list-item-company{font-size:12px;color:#777;margin-top:2px;}
+.list-item-badge{font-size:11px;padding:3px 10px;border-radius:10px;white-space:nowrap;flex-shrink:0;}
+.badge-attended{background:#eafaf1;color:#1e8449;}
+.badge-absent{background:#fef5f5;color:#c0392b;}
+.list-empty{text-align:center;color:#aaa;padding:32px;font-size:14px;}
+
 /* 名簿タブ */
 .roster-header{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
 .roster-meta{font-size:13px;color:#555;line-height:2;margin-bottom:12px;}
@@ -100,6 +125,10 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
   .roster-table th{background:#1a5276!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   #print-timestamp{display:block!important;margin-bottom:6px;}
   @page{margin:10mm;}
+  /* iPad/Safari対応 */
+  html,body{width:100%;height:auto;overflow:visible;}
+  #main-screen{overflow:visible!important;height:auto!important;min-height:0!important;}
+  #tab-roster{overflow:visible!important;height:auto!important;}
 }
 .roster-print-header{display:none;text-align:center;margin-bottom:20px;}
 .roster-print-header h2{font-size:20px;font-weight:700;margin-bottom:6px;}
@@ -170,8 +199,16 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
     </div>
     <div class="metrics">
       <div class="metric-card"><div class="metric-label">出席済み</div><div class="metric-num" id="cnt-attended">-</div></div>
-      <div class="metric-card"><div class="metric-label">参加予定</div><div class="metric-num" id="cnt-total">-</div></div>
-      <div class="metric-card"><div class="metric-label">未受付</div><div class="metric-num red" id="cnt-remain">-</div></div>
+      <div class="metric-card tappable" onclick="showMemberList()">
+        <div class="metric-label">参加予定</div>
+        <div class="metric-num" id="cnt-total">-</div>
+        <div class="metric-tap-hint">タップで一覧</div>
+      </div>
+      <div class="metric-card tappable" onclick="showAbsentList()">
+        <div class="metric-label">未受付</div>
+        <div class="metric-num red" id="cnt-remain">-</div>
+        <div class="metric-tap-hint">タップで一覧</div>
+      </div>
     </div>
     <div class="section-title">出席ログ</div>
     <div class="log-card">
@@ -197,6 +234,18 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
     </div>
     <div id="no-results">検索結果がありません</div>
     <div id="search-results"></div>
+  </div>
+</div>
+
+<!-- 参加予定・未受付 一覧モーダル -->
+<div id="list-modal">
+  <div class="list-modal-card">
+    <div class="list-modal-header">
+      <h3 id="list-modal-title">一覧</h3>
+      <button class="list-modal-close" onclick="closeListModal()">✕</button>
+    </div>
+    <div class="list-modal-count" id="list-modal-count"></div>
+    <div class="list-modal-body" id="list-modal-body"></div>
   </div>
 </div>
 
@@ -349,6 +398,76 @@ function showPopup(icon,name,company,msg){
 function closePopup(){document.getElementById("popup").classList.remove("show");}
 setInterval(function(){if(currentEventId)loadSummary();},30000);
 
+// ===== 参加予定者一覧モーダル =====
+function showMemberList(){
+  if(!currentEventId){alert("研修会を選択してください");return;}
+  openListModal("参加予定者一覧", null, true);
+  jsonp(GAS_URL+"?action=memberList&eventId="+encodeURIComponent(currentEventId),function(err,rows){
+    if(err||!rows){renderListModal([],true);return;}
+    renderListModal(rows, true);
+  });
+}
+
+// ===== 未受付者一覧モーダル =====
+function showAbsentList(){
+  if(!currentEventId){alert("研修会を選択してください");return;}
+  openListModal("未受付者一覧", null, false);
+  jsonp(GAS_URL+"?action=absentList&eventId="+encodeURIComponent(currentEventId),function(err,rows){
+    if(err||!rows){renderListModal([],false);return;}
+    renderListModal(rows, false);
+  });
+}
+
+function openListModal(title){
+  document.getElementById("list-modal-title").textContent = title;
+  document.getElementById("list-modal-count").textContent = "読み込み中...";
+  document.getElementById("list-modal-body").innerHTML =
+    '<div class="list-empty">読み込み中...</div>';
+  document.getElementById("list-modal").classList.add("show");
+}
+
+function renderListModal(rows, isMemberList){
+  var countEl = document.getElementById("list-modal-count");
+  var bodyEl  = document.getElementById("list-modal-body");
+
+  if(!rows || rows.length === 0){
+    countEl.textContent = "0名";
+    bodyEl.innerHTML = '<div class="list-empty">対象者がいません</div>';
+    return;
+  }
+
+  countEl.textContent = rows.length + "名";
+
+  if(isMemberList){
+    // 参加予定者一覧: 出席済み/未受付を色分け
+    bodyEl.innerHTML = rows.map(function(r){
+      var badge = r.attended
+        ? '<span class="list-item-badge badge-attended">✅ ' + r.time + ' 受付済</span>'
+        : '<span class="list-item-badge badge-absent">未受付</span>';
+      return '<div class="list-item">'
+        + '<div class="list-item-info">'
+        + '<div class="list-item-name">' + r.name + '</div>'
+        + '<div class="list-item-company">' + (r.company||"") + '</div>'
+        + '</div>' + badge + '</div>';
+    }).join("");
+  } else {
+    // 未受付者一覧
+    bodyEl.innerHTML = rows.map(function(r){
+      return '<div class="list-item">'
+        + '<div class="list-item-info">'
+        + '<div class="list-item-name">' + r.name + '</div>'
+        + '<div class="list-item-company">' + (r.company||"") + '</div>'
+        + '</div>'
+        + '<span class="list-item-badge badge-absent">未受付</span>'
+        + '</div>';
+    }).join("");
+  }
+}
+
+function closeListModal(){
+  document.getElementById("list-modal").classList.remove("show");
+}
+
 // ===== 名簿タブ =====
 var rosterEventId="";
 var rosterRows=[];
@@ -409,7 +528,10 @@ function printRoster(){
   if(!rosterRows||rosterRows.length===0){alert("名簿データがありません");return;}
   document.getElementById("print-timestamp").textContent=
     "出力日時："+new Date().toLocaleString("ja-JP");
-  window.print();
+
+  // iPad/Safari対応: 印刷前に名簿タブを最上部にスクロール
+  window.scrollTo(0,0);
+  setTimeout(function(){ window.print(); }, 300);
 }
 </script>
 </body>
