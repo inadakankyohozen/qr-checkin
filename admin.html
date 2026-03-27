@@ -158,6 +158,7 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
     <div class="tab active" onclick="switchTab('summary')">出席概要</div>
     <div class="tab" onclick="switchTab('manual')">手動受付</div>
     <div class="tab" onclick="switchTab('roster')">名簿印刷</div>
+    <div class="tab" onclick="switchTab('ticket')">受講票印刷</div>
   </div>
 <div class="tab-panel" id="tab-roster">
   <div class="roster-header">
@@ -238,6 +239,20 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
 </div>
 
 <!-- 参加予定・未受付 一覧モーダル -->
+<div class="tab-panel" id="tab-ticket" style="padding:16px;">
+  <div class="event-select-wrap">
+    <label>行事を選択してください</label>
+    <select id="event-select-ticket" onchange="onTicketEventChange()"></select>
+  </div>
+  <div id="ticket-info" style="display:none;background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+    <div id="ticket-meta" style="font-size:13px;color:#555;line-height:2;margin-bottom:10px;"></div>
+    <button onclick="openTicketPrint()" style="width:100%;padding:12px;background:#1a5276;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;">受講票を印刷する</button>
+    <div style="font-size:11px;color:#aaa;text-align:center;">新しいウィンドウで印刷プレビューが開きます</div>
+  </div>
+  <div id="ticket-loading" style="text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;">読み込み中...</div>
+  <div id="ticket-empty" style="text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;">QRコードが生成されていません。<br>先にスプレッドシートから「① QRコードを生成する」を実行してください。</div>
+</div>
+
 <div id="list-modal">
   <div class="list-modal-card">
     <div class="list-modal-header">
@@ -290,7 +305,7 @@ function saveGasUrl(){
 }
 function switchTab(name){
   // タブボタンの切替
-  var tabNames = ["summary","manual","roster"];
+  var tabNames = ["summary","manual","roster","ticket"];
   document.querySelectorAll(".tab").forEach(function(t,i){
     t.classList.toggle("active", tabNames[i] === name);
   });
@@ -308,7 +323,7 @@ function switchTab(name){
 function loadEvents(){
   jsonp(GAS_URL+"?action=getEvents",function(err,events){
     if(err||!events)return;
-    ["event-select","event-select-manual","event-select-roster"].forEach(function(id){
+    ["event-select","event-select-manual","event-select-roster","event-select-ticket"].forEach(function(id){
       var sel=document.getElementById(id);
       if(!sel)return;
       sel.innerHTML='<option value="">-- 選択してください --</option>';
@@ -397,6 +412,94 @@ function showPopup(icon,name,company,msg){
 }
 function closePopup(){document.getElementById("popup").classList.remove("show");}
 setInterval(function(){if(currentEventId)loadSummary();},30000);
+
+// ===== 受講票印刷タブ =====
+var ticketEventId = "";
+var ticketData    = null;
+
+function onTicketEventChange(){
+  ticketEventId = document.getElementById("event-select-ticket").value;
+  document.getElementById("ticket-info").style.display   = "none";
+  document.getElementById("ticket-empty").style.display  = "none";
+  if(!ticketEventId) return;
+  document.getElementById("ticket-loading").style.display = "block";
+
+  jsonp(GAS_URL+"?action=printTickets&eventId="+encodeURIComponent(ticketEventId), function(err, data){
+    document.getElementById("ticket-loading").style.display = "none";
+    if(err || !data || !data.members){
+      document.getElementById("ticket-empty").style.display = "block";
+      return;
+    }
+    ticketData = data;
+    var withQr = data.members.filter(function(m){ return m.qrData; }).length;
+    document.getElementById("ticket-meta").innerHTML =
+      "<strong>行事名：</strong>" + data.ev.name + "<br>" +
+      "<strong>印刷対象：</strong>" + data.members.length + "名（メールアドレス未登録の方）" +
+      (withQr < data.members.length ? "<br><span style='color:#e74c3c;font-size:12px;'>※QR未生成の方が"+(data.members.length-withQr)+"名います。先にQRコードを生成してください。</span>" : "");
+    document.getElementById("ticket-info").style.display = "block";
+    if(withQr === 0) document.getElementById("ticket-empty").style.display = "block";
+  });
+}
+
+function openTicketPrint(){
+  if(!ticketData) return;
+  var html = buildTicketHtml(ticketData.ev, ticketData.members);
+  var w = window.open("", "_blank");
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function(){ w.print(); }, 800);
+}
+
+function buildTicketHtml(ev, members){
+  var ticketLabel = ev.ticketType || "受講票";
+  var orgTitle    = (ev.titlePrefix || ev.orgName || "");
+
+  var ticketsHtml = members.map(function(m){
+    var qrImg = m.qrData
+      ? '<img src="'+m.qrData+'" alt="QRコード" style="width:180px;height:180px;">'
+      : '<div style="width:180px;height:180px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;border:1px solid #ddd;border-radius:8px;text-align:center;">QRコード<br>未生成</div>';
+
+    var notesHtml = ev.notes
+      ? '<div style="margin-top:14px;padding:10px 12px;background:#fff8e1;border-left:4px solid #f59e0b;border-radius:0 6px 6px 0;">'
+        +'<div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:3px;">注意事項</div>'
+        +'<div style="font-size:12px;color:#78350f;line-height:1.7;">'+ev.notes.replace(/
+/g,"<br>")+'</div>'
+        +'</div>' : "";
+
+    var placeHtml   = ev.place   ? '<tr><td style="color:#666;font-size:12px;padding:4px 0;width:70px;">会場</td><td style="font-size:13px;font-weight:600;padding:4px 0;">'+ev.place+'</td></tr>' : "";
+    var addressHtml = ev.address ? '<tr><td style="color:#666;font-size:12px;padding:4px 0;">住所</td><td style="font-size:12px;padding:4px 0;">'+ev.address+'</td></tr>' : "";
+
+    return '<div style="width:190mm;min-height:270mm;margin:0 auto;padding:12mm 14mm;page-break-after:always;box-sizing:border-box;font-family:Hiragino Sans,sans-serif;">'
+      +'<div style="background:#1a5276;color:#fff;padding:12px 18px;border-radius:8px 8px 0 0;">'
+      +'<div style="font-size:11px;opacity:0.8;margin-bottom:2px;">'+orgTitle+'</div>'
+      +'<div style="font-size:20px;font-weight:700;">'+ticketLabel+'</div>'
+      +'</div>'
+      +'<div style="border:2px solid #1a5276;border-top:none;border-radius:0 0 8px 8px;padding:18px 22px;">'
+      +'<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #eee;">'
+      +'<div style="font-size:13px;color:#555;margin-bottom:3px;">'+(m.company||"")+'</div>'
+      +'<div style="font-size:22px;font-weight:700;color:#1a1a1a;">'+m.name+' 様</div>'
+      +'</div>'
+      +'<div style="font-size:13px;color:#444;line-height:1.8;margin-bottom:14px;">下記の行事にご参加いただきありがとうございます。<br>当日は本受講票のQRコードを受付にご提示ください。</div>'
+      +'<div style="background:#f8f9fa;border-radius:8px;padding:12px 16px;margin-bottom:16px;">'
+      +'<table style="width:100%;border-collapse:collapse;">'
+      +'<tr><td style="color:#666;font-size:12px;padding:4px 0;width:70px;">行事名</td><td style="font-size:15px;font-weight:700;color:#1a5276;padding:4px 0;">'+ev.name+'</td></tr>'
+      +'<tr><td style="color:#666;font-size:12px;padding:4px 0;">開催日</td><td style="font-size:13px;font-weight:600;padding:4px 0;">'+ev.date+'</td></tr>'
+      +placeHtml+addressHtml
+      +'</table></div>'
+      +'<div style="text-align:center;margin:16px 0;">'
+      +'<div style="display:inline-block;padding:14px;background:#fff;border:2px solid #ddd;border-radius:12px;">'+qrImg+'</div>'
+      +'<div style="font-size:12px;color:#666;margin-top:6px;">このQRコードを受付にかざしてください</div>'
+      +'</div>'
+      +notesHtml
+      +'<div style="margin-top:16px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#aaa;text-align:right;">'+orgTitle+'　No.'+m.id+'</div>'
+      +'</div></div>';
+  }).join("");
+
+  return '<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>'+ev.name+' '+ticketLabel+'</title>'
+    +'<style>@page{size:A4;margin:0;}body{margin:0;padding:0;background:#e0e0e0;}@media print{body{background:#fff;}@page{size:A4;margin:0;}}</style>'
+    +'</head><body>'+ticketsHtml+'</body></html>';
+}
 
 // ===== 参加予定者一覧モーダル =====
 function showMemberList(){
