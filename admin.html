@@ -463,8 +463,7 @@ function buildTicketHtml(ev, members){
     var notesHtml = ev.notes
       ? '<div style="margin-top:14px;padding:10px 12px;background:#fff8e1;border-left:4px solid #f59e0b;border-radius:0 6px 6px 0;">'
         +'<div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:3px;">注意事項</div>'
-        +'<div style="font-size:12px;color:#78350f;line-height:1.7;">'+ev.notes.replace(/
-/g,"<br>")+'</div>'
+        +'<div style="font-size:12px;color:#78350f;line-height:1.7;">'+ev.notes.replace(/\n/g,"<br>")+'</div>'
         +'</div>' : "";
 
     var placeHtml   = ev.place   ? '<tr><td style="color:#666;font-size:12px;padding:4px 0;width:70px;">会場</td><td style="font-size:13px;font-weight:600;padding:4px 0;">'+ev.place+'</td></tr>' : "";
