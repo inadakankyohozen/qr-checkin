@@ -160,6 +160,20 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
     <div class="tab" onclick="switchTab('roster')">名簿印刷</div>
     <div class="tab" onclick="switchTab('ticket')">受講票印刷</div>
   </div>
+<div class="tab-panel" id="tab-ticket" style="padding:16px;">
+  <div class="event-select-wrap">
+    <label>行事を選択してください</label>
+    <select id="event-select-ticket" onchange="onTicketEventChange()"></select>
+  </div>
+  <div id="ticket-info" style="display:none;background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+    <div id="ticket-meta" style="font-size:13px;color:#555;line-height:2;margin-bottom:10px;"></div>
+    <button onclick="openTicketPrint()" style="width:100%;padding:12px;background:#1a5276;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;">受講票を印刷する</button>
+    <div style="font-size:11px;color:#aaa;text-align:center;">新しいウィンドウで印刷プレビューが開きます</div>
+  </div>
+  <div id="ticket-loading" style="text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;">読み込み中...</div>
+  <div id="ticket-empty" style="text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;">QRコードが生成されていません。<br>先にスプレッドシートから「① QRコードを生成する」を実行してください。</div>
+</div>
+
 <div class="tab-panel" id="tab-roster">
   <div class="roster-header">
     <div class="event-select-wrap" style="margin-bottom:0;box-shadow:none;padding:0;">
@@ -239,19 +253,6 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
 </div>
 
 <!-- 参加予定・未受付 一覧モーダル -->
-<div class="tab-panel" id="tab-ticket" style="padding:16px;">
-  <div class="event-select-wrap">
-    <label>行事を選択してください</label>
-    <select id="event-select-ticket" onchange="onTicketEventChange()"></select>
-  </div>
-  <div id="ticket-info" style="display:none;background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-    <div id="ticket-meta" style="font-size:13px;color:#555;line-height:2;margin-bottom:10px;"></div>
-    <button onclick="openTicketPrint()" style="width:100%;padding:12px;background:#1a5276;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;">受講票を印刷する</button>
-    <div style="font-size:11px;color:#aaa;text-align:center;">新しいウィンドウで印刷プレビューが開きます</div>
-  </div>
-  <div id="ticket-loading" style="text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;">読み込み中...</div>
-  <div id="ticket-empty" style="text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;">QRコードが生成されていません。<br>先にスプレッドシートから「① QRコードを生成する」を実行してください。</div>
-</div>
 
 <div id="list-modal">
   <div class="list-modal-card">
