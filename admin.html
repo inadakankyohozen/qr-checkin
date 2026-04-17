@@ -472,7 +472,7 @@ function buildTicketHtml(ev, members){
     var addressHtml = ev.address ? '<tr><td style="color:#666;font-size:12px;padding:4px 0;">住所</td><td style="font-size:12px;padding:4px 0;">'+ev.address+'</td></tr>' : "";
 
     return '<div class="ticket" style="width:180mm;margin:0 auto;padding:8mm 10mm;box-sizing:border-box;font-family:Hiragino Sans,sans-serif;">'
-      +'<div style="background:#1a5276;color:#fff;padding:12px 18px;border-radius:8px 8px 0 0;">'
+      +'<div style="background:#1a5276;color:#fff;padding:12px 18px;border-radius:8px 8px 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact;">'
       +'<div style="font-size:11px;opacity:0.8;margin-bottom:2px;">'+orgTitle+'</div>'
       +'<div style="font-size:20px;font-weight:700;">'+ticketLabel+'</div>'
       +'</div>'
@@ -498,7 +498,7 @@ function buildTicketHtml(ev, members){
   }).join("");
 
   return '<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>'+ev.name+' '+ticketLabel+'</title>'
-    +'<style>@page{size:A4;margin:10mm;}body{margin:0;padding:0;background:#fff;}.ticket{page-break-after:always;page-break-inside:avoid;}.ticket:last-child{page-break-after:avoid;}@media print{body{background:#fff;}}</style>'
+    +'<style>@page{size:A4;margin:10mm;}body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}.ticket{page-break-after:always;page-break-inside:avoid;}.ticket:last-child{page-break-after:avoid;}@media print{body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}}</style>'
     +'</head><body>'+ticketsHtml+'</body></html>';
 }
 
