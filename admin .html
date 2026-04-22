@@ -399,9 +399,7 @@ function loadAbsentList(){
   loadEl.style.display="block";
   countEl.textContent="読み込み中...";
   var absentUrl=GAS_URL+"?action=absentList&eventId="+encodeURIComponent(manualEventId);
-  console.log("未受付一覧取得URL:", absentUrl);
   jsonp(absentUrl,function(err,rows){
-    console.log("未受付一覧結果:", err, rows);
     loadEl.style.display="none";
     if(err||!rows||rows.length===0){
       listEl.innerHTML='<div style="text-align:center;color:#aaa;font-size:13px;padding:16px;">未受付者はいません 🎉</div>';
