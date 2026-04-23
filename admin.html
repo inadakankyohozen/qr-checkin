@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>青年部会 管理画面</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -65,6 +65,17 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
 .result-status.none{color:#888;}
 .checkin-btn{padding:10px 18px;background:#27ae60;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;}
 .checkin-btn:disabled{background:#bbb;cursor:not-allowed;}
+.absent-list-btn{width:100%;padding:12px;background:#fff;color:#1a5276;border:2px solid #1a5276;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:14px;}
+.absent-list-btn:hover{background:#f0f7ff;}
+.absent-section{display:none;background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:14px;}
+.absent-section-header{font-size:13px;font-weight:700;color:#1a5276;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #1a5276;display:flex;align-items:center;justify-content:space-between;}
+.absent-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8f9fa;border:1px solid #e8ecf0;border-radius:10px;margin-bottom:6px;}
+.absent-item:last-child{margin-bottom:0;}
+.absent-info{flex:1;min-width:0;}
+.absent-name{font-size:14px;font-weight:700;color:#1a1a1a;}
+.absent-company{font-size:12px;color:#666;margin-top:2px;}
+.absent-checkin-btn{padding:8px 14px;background:#1a5276;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.absent-checkin-btn:hover{background:#2471a3;}
 #popup{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;z-index:100;padding:20px;}
 #popup.show{display:flex;}
 .popup-card{background:#fff;border-radius:20px;padding:28px 24px;max-width:360px;width:100%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
@@ -74,14 +85,10 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
 .popup-msg{font-size:14px;color:#333;margin-top:10px;}
 .popup-close{margin-top:20px;padding:12px 32px;background:#1a5276;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;}
 #no-results{text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;}
-
-/* タップ可能なメトリクスカード */
 .metric-card.tappable{cursor:pointer;transition:transform 0.1s,box-shadow 0.1s;}
 .metric-card.tappable:hover{box-shadow:0 4px 16px rgba(0,0,0,0.12);}
 .metric-card.tappable:active{transform:scale(0.97);}
 .metric-tap-hint{font-size:10px;color:#aaa;margin-top:2px;}
-
-/* 一覧モーダル */
 #list-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;padding:20px;align-items:flex-start;justify-content:center;overflow-y:auto;}
 #list-modal.show{display:flex;}
 .list-modal-card{background:#fff;border-radius:16px;width:100%;max-width:560px;overflow:hidden;margin:auto;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
@@ -99,8 +106,6 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
 .badge-attended{background:#eafaf1;color:#1e8449;}
 .badge-absent{background:#fef5f5;color:#c0392b;}
 .list-empty{text-align:center;color:#aaa;padding:32px;font-size:14px;}
-
-/* 名簿タブ */
 .roster-header{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
 .roster-meta{font-size:13px;color:#555;line-height:2;margin-bottom:12px;}
 .roster-meta strong{color:#1a5276;}
@@ -110,8 +115,6 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
 .roster-table tr:last-child td{border-bottom:none;}
 .roster-table .no{width:40px;text-align:center;color:#888;}
 .print-btn{width:100%;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;}
-
-/* 印刷用スタイル */
 @media print {
   header,.tabs,.event-select-wrap,.metrics,.reload-btn,.csv-btn,.print-btn,.reload-roster-btn,
   #tab-summary,#tab-manual,.section-title,#setup-screen,
@@ -125,7 +128,6 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
   .roster-table th{background:#1a5276!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   #print-timestamp{display:block!important;margin-bottom:6px;}
   @page{margin:10mm;}
-  /* iPad/Safari対応 */
   html,body{width:100%;height:auto;overflow:visible;}
   #main-screen{overflow:visible!important;height:auto!important;min-height:0!important;}
   #tab-roster{overflow:visible!important;height:auto!important;}
@@ -173,7 +175,6 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
   <div id="ticket-loading" style="text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;">読み込み中...</div>
   <div id="ticket-empty" style="text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;">QRコードが生成されていません。<br>先にスプレッドシートから「① QRコードを生成する」を実行してください。</div>
 </div>
-
 <div class="tab-panel" id="tab-roster">
   <div class="roster-header">
     <div class="event-select-wrap" style="margin-bottom:0;box-shadow:none;padding:0;">
@@ -201,12 +202,10 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
         <th>受付方法</th>
       </tr>
     </thead>
-    <tbody id="roster-body">
-    </tbody>
+    <tbody id="roster-body"></tbody>
   </table>
   <div id="roster-empty" style="text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;">出席記録がありません</div>
 </div>
-
   <div class="tab-panel" id="tab-summary" style="display:block;">
     <div class="event-select-wrap">
       <label>研修会</label>
@@ -249,11 +248,17 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
     </div>
     <div id="no-results">検索結果がありません</div>
     <div id="search-results"></div>
+    <button class="absent-list-btn" id="show-absent-btn" onclick="loadAbsentList()" style="display:none;">未受付者一覧を表示</button>
+    <div class="absent-section" id="absent-section">
+      <div class="absent-section-header">
+        <span>未受付者一覧</span>
+        <span id="absent-count" style="font-size:12px;color:#888;font-weight:400;"></span>
+      </div>
+      <div id="absent-loading" style="text-align:center;color:#aaa;font-size:13px;padding:20px;display:none;">読み込み中...</div>
+      <div id="absent-list"></div>
+    </div>
   </div>
 </div>
-
-<!-- 参加予定・未受付 一覧モーダル -->
-
 <div id="list-modal">
   <div class="list-modal-card">
     <div class="list-modal-header">
@@ -264,7 +269,6 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
     <div class="list-modal-body" id="list-modal-body"></div>
   </div>
 </div>
-
 <div id="popup">
   <div class="popup-card">
     <div class="popup-icon" id="popup-icon"></div>
@@ -305,20 +309,17 @@ function saveGasUrl(){
   GAS_URL=url;localStorage.setItem("gas_url",url);showMain();
 }
 function switchTab(name){
-  // タブボタンの切替
-  var tabNames = ["summary","manual","roster","ticket"];
+  var tabNames=["summary","manual","roster","ticket"];
   document.querySelectorAll(".tab").forEach(function(t,i){
-    t.classList.toggle("active", tabNames[i] === name);
+    t.classList.toggle("active",tabNames[i]===name);
   });
-  // タブパネルの切替
   tabNames.forEach(function(n){
-    var el = document.getElementById("tab-"+n);
-    if(el) el.style.display = (n === name) ? "block" : "none";
+    var el=document.getElementById("tab-"+n);
+    if(el)el.style.display=(n===name)?"block":"none";
   });
-  // 名簿タブ初回表示時に研修会リストを読み込む
-  if(name === "roster"){
-    var sel = document.getElementById("event-select-roster");
-    if(sel && sel.options.length <= 1) loadEvents();
+  if(name==="roster"){
+    var sel=document.getElementById("event-select-roster");
+    if(sel&&sel.options.length<=1)loadEvents();
   }
 }
 function loadEvents(){
@@ -369,6 +370,78 @@ function onManualEventChange(){
   document.getElementById("search-results").innerHTML="";
   document.getElementById("no-results").style.display="none";
   document.getElementById("search-input").value="";
+  document.getElementById("absent-section").style.display="none";
+  document.getElementById("absent-list").innerHTML="";
+  if(manualEventId){
+    document.getElementById("show-absent-btn").style.display="block";
+  } else {
+    document.getElementById("show-absent-btn").style.display="none";
+  }
+}
+function loadAbsentList(){
+  if(!manualEventId){alert("先に研修会を選択してください");return;}
+  var section=document.getElementById("absent-section");
+  var listEl=document.getElementById("absent-list");
+  var loadEl=document.getElementById("absent-loading");
+  var countEl=document.getElementById("absent-count");
+  section.style.display="block";
+  listEl.innerHTML="";
+  loadEl.style.display="block";
+  countEl.textContent="";
+  jsonp(GAS_URL+"?action=absentList&eventId="+encodeURIComponent(manualEventId),function(err,rows){
+    loadEl.style.display="none";
+    if(err||!rows||rows.length===0){
+      listEl.innerHTML="<div style='text-align:center;color:#aaa;font-size:13px;padding:16px;'>未受付者はいません</div>";
+      countEl.textContent="0名";
+      return;
+    }
+    countEl.textContent=rows.length+"名";
+    var html="";
+    for(var i=0;i<rows.length;i++){
+      var id=rows[i].id;
+      var nm=rows[i].name;
+      var co=rows[i].company;
+      html+="<div class='absent-item' id='ai-"+id+"'>";
+      html+="<div class='absent-info'>";
+      html+="<div class='absent-name'>"+nm+"</div>";
+      html+="<div class='absent-company'>"+co+"</div>";
+      html+="</div>";
+      html+="<button class='absent-checkin-btn' data-id='"+id+"' data-name='"+nm+"' data-co='"+co+"' onclick='doAbsentCheckin(this)'>手動受付</button>";
+      html+="</div>";
+    }
+    listEl.innerHTML=html;
+  });
+}
+function doAbsentCheckin(btn){
+  var memberId=btn.getAttribute("data-id");
+  var name=btn.getAttribute("data-name");
+  var company=btn.getAttribute("data-co");
+  if(!manualEventId){alert("研修会を選択してください");return;}
+  btn.disabled=true;
+  btn.textContent="処理中...";
+  jsonp(GAS_URL+"?action=manualCheckin&memberId="+encodeURIComponent(memberId)+"&eventId="+encodeURIComponent(manualEventId),function(err,result){
+    if(err||!result){
+      showPopup("error",name,company,"通信エラー。再度お試しください。");
+      btn.disabled=false;
+      btn.textContent="手動受付";
+      return;
+    }
+    if(result.ok){
+      showPopup("ok",result.name,result.company,"受付完了  "+result.time);
+      var item=document.getElementById("ai-"+memberId);
+      if(item)item.remove();
+      var remaining=document.querySelectorAll("#absent-list .absent-item").length;
+      document.getElementById("absent-count").textContent=remaining+"名";
+      if(remaining===0){
+        document.getElementById("absent-list").innerHTML="<div style='text-align:center;color:#aaa;font-size:13px;padding:16px;'>未受付者はいません</div>";
+      }
+      loadSummary();
+    } else if(result.duplicate){
+      showPopup("dup",result.name,result.company,result.msg);
+    } else {
+      showPopup("err",result.name||name,result.company||company,result.msg);
+    }
+  });
 }
 function onSearchInput(){clearTimeout(searchTimer);searchTimer=setTimeout(doSearch,400);}
 function doSearch(){
@@ -394,18 +467,19 @@ function doSearch(){
 function doManualCheckin(memberId,name,company){
   if(!manualEventId){alert("研修会を選択してください");return;}
   jsonp(GAS_URL+"?action=manualCheckin&memberId="+encodeURIComponent(memberId)+"&eventId="+encodeURIComponent(manualEventId),function(err,result){
-    if(err||!result){showPopup("⚠️",name,company,"通信エラー。再度お試しください。");return;}
+    if(err||!result){showPopup("error",name,company,"通信エラー。再度お試しください。");return;}
     if(result.ok){
-      showPopup("✅",result.name,result.company,"受付完了  "+result.time);
+      showPopup("ok",result.name,result.company,"受付完了  "+result.time);
       var item=document.getElementById("item-"+memberId);
       if(item){item.classList.add("attended");var btn=item.querySelector("button");if(btn){btn.textContent="受付済み";btn.disabled=true;btn.style.background="#bbb";}var st=item.querySelector(".result-status");if(st){st.textContent="✅ 受付済み";st.className="result-status ok";}}
       loadSummary();
-    }else if(result.duplicate){showPopup("🔁",result.name,result.company,result.msg);}
-    else{showPopup("⚠️",result.name||name,result.company||company,result.msg);}
+    }else if(result.duplicate){showPopup("dup",result.name,result.company,result.msg);}
+    else{showPopup("err",result.name||name,result.company||company,result.msg);}
   });
 }
 function showPopup(icon,name,company,msg){
-  document.getElementById("popup-icon").textContent=icon;
+  var icons={"ok":"✅","error":"⚠️","dup":"🔁","err":"⚠️"};
+  document.getElementById("popup-icon").textContent=icons[icon]||icon;
   document.getElementById("popup-name").textContent=name;
   document.getElementById("popup-company").textContent=company;
   document.getElementById("popup-msg").textContent=msg;
@@ -413,65 +487,51 @@ function showPopup(icon,name,company,msg){
 }
 function closePopup(){document.getElementById("popup").classList.remove("show");}
 setInterval(function(){if(currentEventId)loadSummary();},30000);
-
 // ===== 受講票印刷タブ =====
-var ticketEventId = "";
-var ticketData    = null;
-
+var ticketEventId="";
+var ticketData=null;
 function onTicketEventChange(){
-  ticketEventId = document.getElementById("event-select-ticket").value;
-  document.getElementById("ticket-info").style.display   = "none";
-  document.getElementById("ticket-empty").style.display  = "none";
-  if(!ticketEventId) return;
-  document.getElementById("ticket-loading").style.display = "block";
-
-  jsonp(GAS_URL+"?action=printTickets&eventId="+encodeURIComponent(ticketEventId), function(err, data){
-    document.getElementById("ticket-loading").style.display = "none";
-    if(err || !data || !data.members){
-      document.getElementById("ticket-empty").style.display = "block";
-      return;
-    }
-    ticketData = data;
-    var withQr = data.members.filter(function(m){ return m.qrData; }).length;
-    document.getElementById("ticket-meta").innerHTML =
-      "<strong>行事名：</strong>" + data.ev.name + "<br>" +
-      "<strong>印刷対象：</strong>" + data.members.length + "名（メールアドレス未登録の方）" +
-      (withQr < data.members.length ? "<br><span style='color:#e74c3c;font-size:12px;'>※QR未生成の方が"+(data.members.length-withQr)+"名います。先にQRコードを生成してください。</span>" : "");
-    document.getElementById("ticket-info").style.display = "block";
-    if(withQr === 0) document.getElementById("ticket-empty").style.display = "block";
+  ticketEventId=document.getElementById("event-select-ticket").value;
+  document.getElementById("ticket-info").style.display="none";
+  document.getElementById("ticket-empty").style.display="none";
+  if(!ticketEventId)return;
+  document.getElementById("ticket-loading").style.display="block";
+  jsonp(GAS_URL+"?action=printTickets&eventId="+encodeURIComponent(ticketEventId),function(err,data){
+    document.getElementById("ticket-loading").style.display="none";
+    if(err||!data||!data.members){document.getElementById("ticket-empty").style.display="block";return;}
+    ticketData=data;
+    var withQr=data.members.filter(function(m){return m.qrData;}).length;
+    document.getElementById("ticket-meta").innerHTML=
+      "<strong>行事名：</strong>"+data.ev.name+"<br>"+
+      "<strong>印刷対象：</strong>"+data.members.length+"名（メールアドレス未登録の方）"+
+      (withQr<data.members.length?"<br><span style='color:#e74c3c;font-size:12px;'>※QR未生成の方が"+(data.members.length-withQr)+"名います。先にQRコードを生成してください。</span>":"");
+    document.getElementById("ticket-info").style.display="block";
+    if(withQr===0)document.getElementById("ticket-empty").style.display="block";
   });
 }
-
 function openTicketPrint(){
-  if(!ticketData) return;
-  var html = buildTicketHtml(ticketData.ev, ticketData.members);
-  var w = window.open("", "_blank");
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
-  setTimeout(function(){ w.print(); }, 800);
+  if(!ticketData)return;
+  var html=buildTicketHtml(ticketData.ev,ticketData.members);
+  var w=window.open("","_blank");
+  w.document.open();w.document.write(html);w.document.close();
+  setTimeout(function(){w.print();},800);
 }
-
-function buildTicketHtml(ev, members){
-  var ticketLabel = ev.ticketType || "受講票";
-  var orgTitle    = (ev.titlePrefix || ev.orgName || "");
-
-  var ticketsHtml = members.map(function(m, idx){
-    var isLast = idx === members.length - 1;
-    var qrImg = m.qrData
-      ? '<img src="'+m.qrData+'" alt="QRコード" style="width:180px;height:180px;">'
-      : '<div style="width:180px;height:180px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;border:1px solid #ddd;border-radius:8px;text-align:center;">QRコード<br>未生成</div>';
-
-    var notesHtml = ev.notes
-      ? '<div style="margin-top:14px;padding:10px 12px;background:#fff8e1;border-left:4px solid #f59e0b;border-radius:0 6px 6px 0;">'
+function buildTicketHtml(ev,members){
+  var ticketLabel=ev.ticketType||"受講票";
+  var orgTitle=(ev.titlePrefix||ev.orgName||"");
+  var ticketsHtml=members.map(function(m,idx){
+    var isLast=idx===members.length-1;
+    var qrImg=m.qrData
+      ?'<img src="'+m.qrData+'" alt="QRコード" style="width:180px;height:180px;">'
+      :'<div style="width:180px;height:180px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;border:1px solid #ddd;border-radius:8px;text-align:center;">QRコード<br>未生成</div>';
+    var notesHtml=ev.notes
+      ?'<div style="margin-top:14px;padding:10px 12px;background:#fff8e1;border-left:4px solid #f59e0b;border-radius:0 6px 6px 0;">'
         +'<div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:3px;">注意事項</div>'
         +'<div style="font-size:12px;color:#78350f;line-height:1.7;">'+ev.notes.replace(/\n/g,"<br>")+'</div>'
-        +'</div>' : "";
-
-    var placeHtml   = ev.place   ? '<tr><td style="color:#666;font-size:12px;padding:4px 0;width:70px;">会場</td><td style="font-size:13px;font-weight:600;padding:4px 0;">'+ev.place+'</td></tr>' : "";
-    var addressHtml = ev.address ? '<tr><td style="color:#666;font-size:12px;padding:4px 0;">住所</td><td style="font-size:12px;padding:4px 0;">'+ev.address+'</td></tr>' : "";
-
-    return '<div class="ticket" style="width:180mm;margin:0 auto;padding:8mm 10mm;box-sizing:border-box;font-family:Hiragino Sans,sans-serif;">'
+        +'</div>':"";
+    var placeHtml=ev.place?'<tr><td style="color:#666;font-size:12px;padding:4px 0;width:70px;">会場</td><td style="font-size:13px;font-weight:600;padding:4px 0;">'+ev.place+'</td></tr>':"";
+    var addressHtml=ev.address?'<tr><td style="color:#666;font-size:12px;padding:4px 0;">住所</td><td style="font-size:12px;padding:4px 0;">'+ev.address+'</td></tr>':"";
+    return'<div class="ticket" style="width:180mm;margin:0 auto;padding:8mm 10mm;box-sizing:border-box;font-family:Hiragino Sans,sans-serif;">'
       +'<div style="background:#1a5276;color:#fff;padding:12px 18px;border-radius:8px 8px 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact;">'
       +'<div style="font-size:11px;opacity:0.8;margin-bottom:2px;">'+orgTitle+'</div>'
       +'<div style="font-size:20px;font-weight:700;">'+ticketLabel+'</div>'
@@ -496,146 +556,94 @@ function buildTicketHtml(ev, members){
       +'<div style="margin-top:16px;padding-top:10px;border-top:1px solid #eee;font-size:10px;color:#aaa;text-align:right;">'+orgTitle+'　No.'+m.id+'</div>'
       +'</div></div>';
   }).join("");
-
-  return '<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>'+ev.name+' '+ticketLabel+'</title>'
+  return'<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>'+ev.name+' '+ticketLabel+'</title>'
     +'<style>@page{size:A4;margin:10mm;}body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}.ticket{page-break-after:always;page-break-inside:avoid;}.ticket:last-child{page-break-after:avoid;}@media print{body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}}</style>'
     +'</head><body>'+ticketsHtml+'</body></html>';
 }
-
 // ===== 参加予定者一覧モーダル =====
 function showMemberList(){
   if(!currentEventId){alert("研修会を選択してください");return;}
-  openListModal("参加予定者一覧", null, true);
+  openListModal("参加予定者一覧");
   jsonp(GAS_URL+"?action=memberList&eventId="+encodeURIComponent(currentEventId),function(err,rows){
     if(err||!rows){renderListModal([],true);return;}
-    renderListModal(rows, true);
+    renderListModal(rows,true);
   });
 }
-
-// ===== 未受付者一覧モーダル =====
 function showAbsentList(){
   if(!currentEventId){alert("研修会を選択してください");return;}
-  openListModal("未受付者一覧", null, false);
+  openListModal("未受付者一覧");
   jsonp(GAS_URL+"?action=absentList&eventId="+encodeURIComponent(currentEventId),function(err,rows){
     if(err||!rows){renderListModal([],false);return;}
-    renderListModal(rows, false);
+    renderListModal(rows,false);
   });
 }
-
 function openListModal(title){
-  document.getElementById("list-modal-title").textContent = title;
-  document.getElementById("list-modal-count").textContent = "読み込み中...";
-  document.getElementById("list-modal-body").innerHTML =
-    '<div class="list-empty">読み込み中...</div>';
+  document.getElementById("list-modal-title").textContent=title;
+  document.getElementById("list-modal-count").textContent="読み込み中...";
+  document.getElementById("list-modal-body").innerHTML='<div class="list-empty">読み込み中...</div>';
   document.getElementById("list-modal").classList.add("show");
 }
-
-function renderListModal(rows, isMemberList){
-  var countEl = document.getElementById("list-modal-count");
-  var bodyEl  = document.getElementById("list-modal-body");
-
-  if(!rows || rows.length === 0){
-    countEl.textContent = "0名";
-    bodyEl.innerHTML = '<div class="list-empty">対象者がいません</div>';
-    return;
-  }
-
-  countEl.textContent = rows.length + "名";
-
+function renderListModal(rows,isMemberList){
+  var countEl=document.getElementById("list-modal-count");
+  var bodyEl=document.getElementById("list-modal-body");
+  if(!rows||rows.length===0){countEl.textContent="0名";bodyEl.innerHTML='<div class="list-empty">対象者がいません</div>';return;}
+  countEl.textContent=rows.length+"名";
   if(isMemberList){
-    // 参加予定者一覧: 出席済み/未受付を色分け
-    bodyEl.innerHTML = rows.map(function(r){
-      var badge = r.attended
-        ? '<span class="list-item-badge badge-attended">✅ ' + r.time + ' 受付済</span>'
-        : '<span class="list-item-badge badge-absent">未受付</span>';
-      return '<div class="list-item">'
-        + '<div class="list-item-info">'
-        + '<div class="list-item-name">' + r.name + '</div>'
-        + '<div class="list-item-company">' + (r.company||"") + '</div>'
-        + '</div>' + badge + '</div>';
+    bodyEl.innerHTML=rows.map(function(r){
+      var badge=r.attended
+        ?'<span class="list-item-badge badge-attended">✅ '+r.time+' 受付済</span>'
+        :'<span class="list-item-badge badge-absent">未受付</span>';
+      return'<div class="list-item"><div class="list-item-info"><div class="list-item-name">'+r.name+'</div><div class="list-item-company">'+(r.company||"")+'</div></div>'+badge+'</div>';
     }).join("");
   } else {
-    // 未受付者一覧
-    bodyEl.innerHTML = rows.map(function(r){
-      return '<div class="list-item">'
-        + '<div class="list-item-info">'
-        + '<div class="list-item-name">' + r.name + '</div>'
-        + '<div class="list-item-company">' + (r.company||"") + '</div>'
-        + '</div>'
-        + '<span class="list-item-badge badge-absent">未受付</span>'
-        + '</div>';
+    bodyEl.innerHTML=rows.map(function(r){
+      return'<div class="list-item"><div class="list-item-info"><div class="list-item-name">'+r.name+'</div><div class="list-item-company">'+(r.company||"")+'</div></div><span class="list-item-badge badge-absent">未受付</span></div>';
     }).join("");
   }
 }
-
-function closeListModal(){
-  document.getElementById("list-modal").classList.remove("show");
-}
-
+function closeListModal(){document.getElementById("list-modal").classList.remove("show");}
 // ===== 名簿タブ =====
 var rosterEventId="";
 var rosterRows=[];
-
 function onRosterEventChange(){
   rosterEventId=document.getElementById("event-select-roster").value;
-  if(rosterEventId) loadRoster();
+  if(rosterEventId)loadRoster();
 }
-
 function loadRoster(){
   if(!rosterEventId)return;
   document.getElementById("roster-table").style.display="none";
   document.getElementById("roster-empty").style.display="none";
-
-  // サマリーで行事情報を取得
   jsonp(GAS_URL+"?action=summary&eventId="+encodeURIComponent(rosterEventId),function(err,s){
     if(err||!s)return;
     var sel=document.getElementById("event-select-roster");
     var evName=sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].textContent:"";
     var metaEl=document.getElementById("roster-meta");
-    metaEl.innerHTML="<strong>行事名：</strong>"+evName+"<br>"
-      +"<strong>出席者数：</strong>"+s.attended+"名";
+    metaEl.innerHTML="<strong>行事名：</strong>"+evName+"<br><strong>出席者数：</strong>"+s.attended+"名";
     document.getElementById("roster-meta-card").style.display="block";
-
-    // 印刷用ヘッダー設定
     document.getElementById("print-title").textContent=evName+" 出席者名簿";
     document.getElementById("print-meta").textContent="出席者数："+s.attended+"名";
-    document.getElementById("print-timestamp").textContent=
-      "出力日時："+new Date().toLocaleString("ja-JP");
+    document.getElementById("print-timestamp").textContent="出力日時："+new Date().toLocaleString("ja-JP");
   });
-
-  // 全ログを取得して名簿を表示
   jsonp(GAS_URL+"?action=fulllog&eventId="+encodeURIComponent(rosterEventId),function(err,rows){
     if(err||!rows){document.getElementById("roster-empty").style.display="block";return;}
     rosterRows=rows;
     var tbody=document.getElementById("roster-body");
-    if(rows.length===0){
-      document.getElementById("roster-empty").style.display="block";
-      return;
-    }
-    // 受付時刻順にソート
+    if(rows.length===0){document.getElementById("roster-empty").style.display="block";return;}
     rows.sort(function(a,b){return a.time<b.time?-1:1;});
     tbody.innerHTML=rows.map(function(r,i){
-      var badge=r.method==="手動受付"?
-        '<span style="background:#ebf5fb;color:#1a5276;font-size:11px;padding:2px 8px;border-radius:10px;">手動</span>':
-        '<span style="background:#eafaf1;color:#1e8449;font-size:11px;padding:2px 8px;border-radius:10px;">QR</span>';
-      return'<tr><td class="no">'+(i+1)+'</td>'
-        +'<td style="font-size:12px;">'+(r.company||"")+"</td>"
-        +'<td><strong>'+r.name+"</strong></td>"
-        +"<td>"+r.time+"</td>"
-        +"<td>"+badge+"</td></tr>";
+      var badge=r.method==="手動受付"
+        ?'<span style="background:#ebf5fb;color:#1a5276;font-size:11px;padding:2px 8px;border-radius:10px;">手動</span>'
+        :'<span style="background:#eafaf1;color:#1e8449;font-size:11px;padding:2px 8px;border-radius:10px;">QR</span>';
+      return'<tr><td class="no">'+(i+1)+'</td><td style="font-size:12px;">'+(r.company||"")+"</td><td><strong>"+r.name+"</strong></td><td>"+r.time+"</td><td>"+badge+"</td></tr>";
     }).join("");
     document.getElementById("roster-table").style.display="table";
   });
 }
-
 function printRoster(){
   if(!rosterRows||rosterRows.length===0){alert("名簿データがありません");return;}
-  document.getElementById("print-timestamp").textContent=
-    "出力日時："+new Date().toLocaleString("ja-JP");
-
-  // iPad/Safari対応: 印刷前に名簿タブを最上部にスクロール
+  document.getElementById("print-timestamp").textContent="出力日時："+new Date().toLocaleString("ja-JP");
   window.scrollTo(0,0);
-  setTimeout(function(){ window.print(); }, 300);
+  setTimeout(function(){window.print();},300);
 }
 </script>
 </body>
