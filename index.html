@@ -499,16 +499,25 @@ function handleQRCode(data){
   var url=GAS_URL+"?action=checkin&encoded="+encodeURIComponent(data.replace(/=+$/,""))+"&eventId="+encodeURIComponent(currentEventId);
   jsonp(url,function(err,result){
     if(err||!result){showResult("error","通信エラー","","再度お試しください");setTimeout(function(){hideResult();isProcessing=false;},3000);return;}
-    // QR受付成功時は未受付一覧から自動削除
-    if(result&&result.ok&&result.memberId){
-      var item=document.getElementById("aqr-"+result.memberId);
-      if(item)item.remove();
-      var remaining=document.querySelectorAll("#absent-list-qr .absent-qr-item").length;
-      var countEl=document.getElementById("absent-list-count");
-      if(countEl)countEl.textContent=remaining+"名";
-      if(remaining===0){
-        var listEl=document.getElementById("absent-list-qr");
-        if(listEl)listEl.innerHTML="<div style='text-align:center;color:#aaa;font-size:13px;padding:12px;'>未受付者はいません</div>";
+    // QR受付成功時は氏名で未受付一覧から自動削除
+    if(result&&result.ok){
+      var nameToRemove = result.name || "";
+      if(nameToRemove){
+        var items = document.querySelectorAll("#absent-list-qr .absent-qr-item");
+        for(var k=0;k<items.length;k++){
+          var nameEl = items[k].querySelector(".absent-qr-name");
+          if(nameEl && nameEl.textContent === nameToRemove){
+            items[k].remove();
+            break;
+          }
+        }
+        var remaining=document.querySelectorAll("#absent-list-qr .absent-qr-item").length;
+        var countEl=document.getElementById("absent-list-count");
+        if(countEl)countEl.textContent=remaining+"名";
+        if(remaining===0){
+          var listEl=document.getElementById("absent-list-qr");
+          if(listEl)listEl.innerHTML="<div style='text-align:center;color:#aaa;font-size:13px;padding:12px;'>未受付者はいません</div>";
+        }
       }
     }
     if(result.ok)showResult("success",result.name,result.company,"受付完了  "+result.time);
