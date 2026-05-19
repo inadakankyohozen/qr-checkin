@@ -199,6 +199,14 @@ body{
   #result-card{margin:8px 10px 0;}
   #recent-card{margin:0 10px 10px;}
 }
+.absent-qr-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8f9fa;border:1px solid #e8ecf0;border-radius:10px;margin-bottom:6px;}
+.absent-qr-item:last-child{margin-bottom:0;}
+.absent-qr-info{flex:1;min-width:0;}
+.absent-qr-name{font-size:14px;font-weight:700;color:#1a1a1a;}
+.absent-qr-company{font-size:12px;color:#666;margin-top:2px;}
+.absent-qr-btn{padding:8px 12px;background:#1a5276;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.absent-qr-btn:hover{background:#2471a3;}
+.absent-qr-btn:disabled{background:#bbb;}
 </style>
 </head>
 <body>
@@ -277,6 +285,18 @@ body{
           <div class="count-num" id="cnt-remain" style="color:var(--red);">-</div>
         </div>
       </div>
+      <!-- 未受付者一覧 -->
+      <div id="absent-card" style="display:none;background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.08);margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <h3 style="margin:0;font-size:15px;color:#1a5276;">未受付者一覧</h3>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <span id="absent-list-count" style="font-size:12px;color:#888;"></span>
+            <button onclick="loadAbsentListQR()" style="padding:5px 10px;background:#1a5276;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;">🔄 再取得</button>
+          </div>
+        </div>
+        <div id="absent-list-qr-loading" style="text-align:center;color:#aaa;font-size:13px;padding:12px;display:none;">読み込み中...</div>
+        <div id="absent-list-qr"></div>
+      </div>
       <div id="recent-card">
         <h3>直近の受付</h3>
         <ul id="recent-list">
@@ -337,6 +357,74 @@ function startClock(){
   tick();setInterval(tick,1000);
 }
 
+function loadAbsentListQR(){
+  if(!currentEventId){return;}
+  var card=document.getElementById("absent-card");
+  var listEl=document.getElementById("absent-list-qr");
+  var loadEl=document.getElementById("absent-list-qr-loading");
+  var countEl=document.getElementById("absent-list-count");
+  card.style.display="block";
+  listEl.innerHTML="";
+  loadEl.style.display="block";
+  countEl.textContent="";
+  jsonp(GAS_URL+"?action=absentList&eventId="+encodeURIComponent(currentEventId),function(err,rows){
+    loadEl.style.display="none";
+    if(err||!rows||rows.length===0){
+      listEl.innerHTML="<div style='text-align:center;color:#aaa;font-size:13px;padding:12px;'>未受付者はいません</div>";
+      countEl.textContent="0名";
+      return;
+    }
+    countEl.textContent=rows.length+"名";
+    var html="";
+    for(var i=0;i<rows.length;i++){
+      var id=rows[i].id;
+      var nm=rows[i].name;
+      var co=rows[i].company;
+      html+="<div class='absent-qr-item' id='aqr-"+id+"'>";
+      html+="<div class='absent-qr-info'>";
+      html+="<div class='absent-qr-name'>"+nm+"</div>";
+      html+="<div class='absent-qr-company'>"+co+"</div>";
+      html+="</div>";
+      html+="<button class='absent-qr-btn' data-id='"+id+"' data-name='"+nm+"' data-co='"+co+"' onclick='doAbsentCheckinQR(this)'>手動受付</button>";
+      html+="</div>";
+    }
+    listEl.innerHTML=html;
+  });
+}
+function doAbsentCheckinQR(btn){
+  var memberId=btn.getAttribute("data-id");
+  var name=btn.getAttribute("data-name");
+  var company=btn.getAttribute("data-co");
+  btn.disabled=true;
+  btn.textContent="処理中...";
+  jsonp(GAS_URL+"?action=manualCheckin&memberId="+encodeURIComponent(memberId)+"&eventId="+encodeURIComponent(currentEventId),function(err,result){
+    if(err||!result){
+      btn.disabled=false;
+      btn.textContent="手動受付";
+      showResult("error",name,company,"通信エラー。再度お試しください。");
+      return;
+    }
+    if(result.ok){
+      showResult("ok",result.name,result.company,"手動受付完了");
+      var item=document.getElementById("aqr-"+memberId);
+      if(item)item.remove();
+      var remaining=document.querySelectorAll("#absent-list-qr .absent-qr-item").length;
+      document.getElementById("absent-list-count").textContent=remaining+"名";
+      if(remaining===0){
+        document.getElementById("absent-list-qr").innerHTML="<div style='text-align:center;color:#aaa;font-size:13px;padding:12px;'>未受付者はいません</div>";
+      }
+      loadSummary();
+    }else if(result.duplicate){
+      showResult("dup",result.name,result.company,"受付済みです");
+      var item2=document.getElementById("aqr-"+memberId);
+      if(item2)item2.remove();
+    }else{
+      btn.disabled=false;
+      btn.textContent="手動受付";
+      showResult("error",result.name||name,result.company||company,result.msg||"エラーが発生しました");
+    }
+  });
+}
 function loadEvents(){
   jsonp(GAS_URL+"?action=getEvents",function(err,events){
     var sel=document.getElementById("event-select");
@@ -409,6 +497,18 @@ function handleQRCode(data){
   var url=GAS_URL+"?action=checkin&encoded="+encodeURIComponent(data.replace(/=+$/,""))+"&eventId="+encodeURIComponent(currentEventId);
   jsonp(url,function(err,result){
     if(err||!result){showResult("error","通信エラー","","再度お試しください");setTimeout(function(){hideResult();isProcessing=false;},3000);return;}
+    // QR受付成功時は未受付一覧から自動削除
+    if(result&&result.ok&&result.memberId){
+      var item=document.getElementById("aqr-"+result.memberId);
+      if(item)item.remove();
+      var remaining=document.querySelectorAll("#absent-list-qr .absent-qr-item").length;
+      var countEl=document.getElementById("absent-list-count");
+      if(countEl)countEl.textContent=remaining+"名";
+      if(remaining===0){
+        var listEl=document.getElementById("absent-list-qr");
+        if(listEl)listEl.innerHTML="<div style='text-align:center;color:#aaa;font-size:13px;padding:12px;'>未受付者はいません</div>";
+      }
+    }
     if(result.ok)showResult("success",result.name,result.company,"受付完了  "+result.time);
     else if(result.duplicate)showResult("dup",result.name,result.company,result.msg);
     else showResult("error",result.name||"エラー",result.company||"",result.msg);
@@ -434,7 +534,12 @@ function onEventChange(){
   currentEventId=sel.value;
   var txt=currentEventId?sel.options[sel.selectedIndex].textContent:"行事未選択";
   document.getElementById("event-badge").textContent=txt.length>14?txt.substring(0,13)+"…":txt;
-  if(currentEventId)updateSummary();
+  if(currentEventId){
+    updateSummary();
+    loadAbsentListQR();
+  } else {
+    document.getElementById("absent-card").style.display="none";
+  }
 }
 
 function updateSummary(){
