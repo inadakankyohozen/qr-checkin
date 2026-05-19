@@ -378,23 +378,25 @@ function loadAbsentListQR(){
     var html="";
     for(var i=0;i<rows.length;i++){
       var id=rows[i].id;
-      var nm=rows[i].name;
-      var co=rows[i].company;
-      html+="<div class='absent-qr-item' id='aqr-"+id+"'>";
+      var nm=rows[i].name||"";
+      var co=rows[i].company||"";
+      // HTML要素IDにはインデックスを使用（特殊文字対策）
+      html+="<div class='absent-qr-item' id='aqr-"+i+"'>";
       html+="<div class='absent-qr-info'>";
       html+="<div class='absent-qr-name'>"+nm+"</div>";
       html+="<div class='absent-qr-company'>"+co+"</div>";
       html+="</div>";
-      html+="<button class='absent-qr-btn' data-id='"+id+"' data-name='"+nm+"' data-co='"+co+"' onclick='doAbsentCheckinQR(this)'>手動受付</button>";
+      html+="<button class='absent-qr-btn' data-idx='"+i+"' data-id='"+encodeURIComponent(id)+"' data-name='"+encodeURIComponent(nm)+"' data-co='"+encodeURIComponent(co)+"' onclick='doAbsentCheckinQR(this)'>手動受付</button>";
       html+="</div>";
     }
     listEl.innerHTML=html;
   });
 }
 function doAbsentCheckinQR(btn){
-  var memberId=btn.getAttribute("data-id");
-  var name=btn.getAttribute("data-name");
-  var company=btn.getAttribute("data-co");
+  var memberId=decodeURIComponent(btn.getAttribute("data-id")||"");
+  var name=decodeURIComponent(btn.getAttribute("data-name")||"");
+  var company=decodeURIComponent(btn.getAttribute("data-co")||"");
+  var idx=btn.getAttribute("data-idx");
   btn.disabled=true;
   btn.textContent="処理中...";
   jsonp(GAS_URL+"?action=manualCheckin&memberId="+encodeURIComponent(memberId)+"&eventId="+encodeURIComponent(currentEventId),function(err,result){
@@ -406,7 +408,7 @@ function doAbsentCheckinQR(btn){
     }
     if(result.ok){
       showResult("ok",result.name,result.company,"手動受付完了");
-      var item=document.getElementById("aqr-"+memberId);
+      var item=document.getElementById("aqr-"+idx);
       if(item)item.remove();
       var remaining=document.querySelectorAll("#absent-list-qr .absent-qr-item").length;
       document.getElementById("absent-list-count").textContent=remaining+"名";
