@@ -116,6 +116,7 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
 .roster-table .no{width:40px;text-align:center;color:#888;}
 .print-btn{width:100%;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;}
 @media print {
+  @page{size:A4 portrait;margin:12mm;}
   header,.tabs,.event-select-wrap,.metrics,.reload-btn,.csv-btn,.print-btn,.reload-roster-btn,
   #tab-summary,#tab-manual,#tab-plan .event-select-wrap,#tab-plan .reload-btn,#tab-plan .print-btn,.section-title,#setup-screen,
   #plan-meta-card,
@@ -124,7 +125,7 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
   #plan-print-header{display:block!important;}
   #plan-print-timestamp{display:block!important;}
   /* A4縦に収まるようにフォントサイズを調整 */
-  #tab-plan .roster-table{font-size:11px;}
+  #tab-plan .roster-table{font-size:11px;width:100%;}
   #tab-plan .roster-table th{padding:6px 8px;font-size:11px;}
   #tab-plan .roster-table td{padding:5px 8px;}
   body{background:#fff;margin:0;padding:0;}
@@ -546,11 +547,17 @@ function loadPlanRoster(){
   document.getElementById("plan-empty").style.display="none";
   document.getElementById("plan-meta-card").style.display="none";
   jsonp(GAS_URL+"?action=planRoster&eventId="+encodeURIComponent(planEventId),function(err,data){
-    if(err||!data||!data.members){
+    if(err||!data){
       document.getElementById("plan-empty").style.display="block";
       return;
     }
-    planRows=data.members;
+    var members = data.members || (Array.isArray(data) ? data : []);
+    if(members.length===0){
+      document.getElementById("plan-empty").style.display="block";
+      return;
+    }
+    planRows=members;
+    data.members=members;
     var ev=data.ev||{};
     var sel=document.getElementById("event-select-plan");
     var evName=sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].textContent:"";
