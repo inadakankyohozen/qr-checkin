@@ -532,7 +532,7 @@ function showPopup(icon,name,company,msg){
   document.getElementById("popup").classList.add("show");
 }
 function closePopup(){document.getElementById("popup").classList.remove("show");}
-setInterval(function(){if(currentEventId)loadSummary();},10000);
+setInterval(function(){if(currentEventId)loadSummary();},30000);
 // ===== 参加予定名簿タブ =====
 var planEventId="";
 var planRows=[];
@@ -546,11 +546,17 @@ function loadPlanRoster(){
   document.getElementById("plan-empty").style.display="none";
   document.getElementById("plan-meta-card").style.display="none";
   jsonp(GAS_URL+"?action=planRoster&eventId="+encodeURIComponent(planEventId),function(err,data){
-    if(err||!data||!data.members){
+    if(err||!data){
       document.getElementById("plan-empty").style.display="block";
       return;
     }
-    planRows=data.members;
+    var members = data.members || (Array.isArray(data) ? data : []);
+    if(members.length===0){
+      document.getElementById("plan-empty").style.display="block";
+      return;
+    }
+    planRows=members;
+    data.members=members;
     var ev=data.ev||{};
     var sel=document.getElementById("event-select-plan");
     var evName=sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].textContent:"";
