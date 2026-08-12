@@ -117,7 +117,7 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
 .print-btn{width:100%;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;}
 @media print {
   header,.tabs,.event-select-wrap,.metrics,.reload-btn,.csv-btn,.print-btn,.reload-roster-btn,
-  #tab-summary,#tab-manual,.section-title,#setup-screen,
+  #tab-summary,#tab-manual,#tab-plan .event-select-wrap,#tab-plan .reload-btn,#tab-plan .print-btn,.section-title,#setup-screen,
   .roster-header{display:none!important;}
   body{background:#fff;margin:0;padding:0;}
   #main-screen{display:block!important;}
@@ -161,8 +161,32 @@ select{width:100%;font-size:15px;padding:10px 12px;border:1.5px solid #ddd;borde
     <div class="tab active" onclick="switchTab('summary')">出席概要</div>
     <div class="tab" onclick="switchTab('manual')">手動受付</div>
     <div class="tab" onclick="switchTab('roster')">名簿印刷</div>
+    <div class="tab" onclick="switchTab('plan')">参加予定</div>
     <div class="tab" onclick="switchTab('ticket')">受講票印刷</div>
   </div>
+<div class="tab-panel" id="tab-plan" style="padding:16px;">
+  <div class="event-select-wrap">
+    <label>行事を選択してください</label>
+    <select id="event-select-plan" onchange="onPlanEventChange()"></select>
+  </div>
+  <div id="plan-meta-card" style="display:none;" class="roster-header">
+    <div class="roster-meta" id="plan-meta"></div>
+    <button class="print-btn" onclick="printPlanRoster()">印刷 / PDF保存</button>
+    <button class="reload-btn" onclick="loadPlanRoster()" style="margin-top:8px;">最新情報に更新</button>
+  </div>
+  <div id="plan-empty" style="text-align:center;color:#aaa;font-size:14px;padding:32px;display:none;">参加予定者がいません</div>
+  <table class="roster-table" id="plan-table" style="display:none;">
+    <thead>
+      <tr>
+        <th class="no">No.</th>
+        <th>事業所名</th>
+        <th>氏名</th>
+        <th style="width:60px;text-align:center;">受付</th>
+      </tr>
+    </thead>
+    <tbody id="plan-body"></tbody>
+  </table>
+</div>
 <div class="tab-panel" id="tab-ticket" style="padding:16px;">
   <div class="event-select-wrap">
     <label>行事を選択してください</label>
@@ -313,7 +337,7 @@ function saveGasUrl(){
   GAS_URL=url;localStorage.setItem("gas_url",url);showMain();
 }
 function switchTab(name){
-  var tabNames=["summary","manual","roster","ticket"];
+  var tabNames=["summary","manual","roster","plan","ticket"];
   document.querySelectorAll(".tab").forEach(function(t,i){
     t.classList.toggle("active",tabNames[i]===name);
   });
@@ -329,7 +353,7 @@ function switchTab(name){
 function loadEvents(){
   jsonp(GAS_URL+"?action=getEvents",function(err,events){
     if(err||!events)return;
-    ["event-select","event-select-manual","event-select-roster","event-select-ticket"].forEach(function(id){
+    ["event-select","event-select-manual","event-select-roster","event-select-plan","event-select-ticket"].forEach(function(id){
       var sel=document.getElementById(id);
       if(!sel)return;
       sel.innerHTML='<option value="">-- 選択してください --</option>';
@@ -492,6 +516,50 @@ function showPopup(icon,name,company,msg){
 }
 function closePopup(){document.getElementById("popup").classList.remove("show");}
 setInterval(function(){if(currentEventId)loadSummary();},10000);
+// ===== 参加予定名簿タブ =====
+var planEventId="";
+var planRows=[];
+function onPlanEventChange(){
+  planEventId=document.getElementById("event-select-plan").value;
+  if(planEventId) loadPlanRoster();
+}
+function loadPlanRoster(){
+  if(!planEventId)return;
+  document.getElementById("plan-table").style.display="none";
+  document.getElementById("plan-empty").style.display="none";
+  document.getElementById("plan-meta-card").style.display="none";
+  jsonp(GAS_URL+"?action=planRoster&eventId="+encodeURIComponent(planEventId),function(err,data){
+    if(err||!data||!data.members){
+      document.getElementById("plan-empty").style.display="block";
+      return;
+    }
+    planRows=data.members;
+    var ev=data.ev||{};
+    var sel=document.getElementById("event-select-plan");
+    var evName=sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].textContent:"";
+    document.getElementById("plan-meta").innerHTML=
+      "<strong>行事名：</strong>"+evName+"<br>"+
+      "<strong>参加予定者数：</strong>"+data.members.length+"名";
+    document.getElementById("plan-meta-card").style.display="block";
+    if(data.members.length===0){
+      document.getElementById("plan-empty").style.display="block";
+      return;
+    }
+    var tbody=document.getElementById("plan-body");
+    tbody.innerHTML=data.members.map(function(r,i){
+      return'<tr><td class="no">'+(i+1)+'</td>'
+        +'<td style="font-size:12px;">'+(r.company||"")+"</td>"
+        +'<td><strong>'+r.name+"</strong></td>"
+        +'<td style="text-align:center;font-size:18px;">□</td></tr>';
+    }).join("");
+    document.getElementById("plan-table").style.display="table";
+  });
+}
+function printPlanRoster(){
+  if(!planRows||planRows.length===0){alert("名簿データがありません");return;}
+  window.scrollTo(0,0);
+  setTimeout(function(){window.print();},300);
+}
 // ===== 受講票印刷タブ =====
 var ticketEventId="";
 var ticketData=null;
